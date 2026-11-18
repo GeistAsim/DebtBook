@@ -1,9 +1,11 @@
 import enum
-from datetime import datetime, timezone 
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from decimal import Decimal
 from sqlalchemy import DateTime
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import (
-    String, Integer, BigInteger, Numeric, Enum
+    String, Integer, BigInteger, Numeric
 )
 from sqlalchemy import (
     ForeignKey, CheckConstraint, Index
@@ -11,6 +13,11 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database.db import Base, BigInt
+
+
+def utc_now():
+    return datetime.now(ZoneInfo("Asia/Kolkata"))
+
 
 class TxnType(str, enum.Enum):
     debt = "DEBT"
@@ -23,13 +30,13 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(BigInt, primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
-    owner_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
     shop_name: Mapped[str] = mapped_column(String(64), nullable=False)
     email: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
     mobile_no: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=utc_now()
     )
 
     customer: Mapped[list["Customer"]] = relationship(
@@ -56,17 +63,17 @@ class Customer(Base):
         BigInt, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
 
-    customer_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
     mobile_no: Mapped[str | None] = mapped_column(String(20))
 
     # Amount the customer currently owes the Shop
     net_balance: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0.00"))
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=utc_now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=utc_now(), onupdate=utc_now()
     )
 
     user: Mapped["User"] = relationship(back_populates="customer")
@@ -93,11 +100,11 @@ class Transaction(Base):
         BigInt, ForeignKey("customers.id", ondelete="CASCADE")
     )
 
-    type: Mapped[TxnType] = mapped_column(Enum(TxnType))
+    txn_type: Mapped[TxnType] = mapped_column(SQLEnum(TxnType))
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2))
-    balance_after: Mapped[Decimal] = mapped_column(Numeric(12, 2))
+    new_balance: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     txn_date: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=utc_now()
     )
 
     user: Mapped["User"] = relationship(

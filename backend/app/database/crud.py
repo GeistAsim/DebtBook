@@ -13,7 +13,7 @@ class OperationDB:
 
     def _is_valid_customer(self, customer_id: int, user_id: int):
         """Check customer is valid for shop owner or not"""
-        customer = self._conn.query(Customer).filter(Customer.id == customer_id, user_id == user_id).with_for_update().one_or_none()
+        customer = self._conn.query(Customer).filter(Customer.id == customer_id, Customer.user_id == user_id).with_for_update().one_or_none()
         if customer is not None: return customer
         return None
 
@@ -21,7 +21,7 @@ class OperationDB:
     def create_new_user(
             self,
             username: str,
-            owner_name: str,
+            name: str,
             shop_name: str,
             email: str,
             mobile_no: str,
@@ -30,7 +30,7 @@ class OperationDB:
         """Create New User"""
         user = User(
             username=username,
-            owner_name=owner_name,
+            name=name,
             shop_name=shop_name,
             email=email,
             mobile_no=mobile_no,
@@ -45,7 +45,7 @@ class OperationDB:
         """create new customer"""
         customer = Customer(
             user_id=user_id,
-            customer_name=name,
+            name=name,
             mobile_no=mobile_no
         )
         self._conn.add(customer)
@@ -68,7 +68,7 @@ class OperationDB:
 
         # check customer is valid for user & exist or not
         if customer is None: raise LookupError("Customer not found!!!")
-        
+
         # check Transaction type
         if txn_type == TxnType.debt:
             customer.net_balance += amount
@@ -80,9 +80,9 @@ class OperationDB:
         txn = Transaction(
             user_id=user_id,
             customer_id=customer_id,
-            type=txn_type,
+            txn_type=txn_type,
             amount=amount,
-            balance_after=customer.net_balance
+            new_balance=customer.net_balance
         )
 
         self._conn.add(txn)
