@@ -4,8 +4,8 @@ from app.database.db import Base, engine, SessionLocal
 from app.database.tables import User, Customer, Transaction, TxnType
 
 class OperationDB:
-    def __init__(self, conn: Session):
-        self._conn = conn
+    def __init__(self):
+        self._conn = SessionLocal()
 
     def __str__(self):
         return "CRUD operations support for DB"

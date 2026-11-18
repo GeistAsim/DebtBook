@@ -42,7 +42,7 @@ class NewTokenData(BaseModel):
 
 class NewCustomer(BaseModel):
     name: str
-    mobile_no: str | None
+    mobile_no: str | None = None
 
 
 """ Transactions """
