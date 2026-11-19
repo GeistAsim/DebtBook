@@ -32,7 +32,7 @@ async def new_txn(data: Txn):
     
     try:
         crud = OperationDB()
-        txn = crud.new_txn(user_id=1, customer_id=data["customer_id"], txn_type=data["txn_type"], amount=data["amount"])
+        txn = crud.new_txn(user_id=2, customer_id=data["customer_id"], txn_type=data["txn_type"], amount=data["amount"])
 
     except Exception as err:
         raise HTTPException(
@@ -49,7 +49,7 @@ async def new_customer(data: NewCustomer):
 
     try:
         crud = OperationDB()
-        customer = crud.create_new_customer(user_id=1, name=data["name"], mobile_no=data["mobile_no"] if "mobile_no" in data else None)
+        customer = crud.create_new_customer(user_id=2, name=data["name"], mobile_no=data["mobile_no"] if "mobile_no" in data else None)
 
     except Exception as err:
         raise HTTPException(

@@ -107,7 +107,7 @@ class OperationDB:
         try:
             users = self._conn.scalars(stmt).all()
         except SQLAlchemyError as err:
-            raise RuntimeError(f"DataBase error while fetching users!!!\t{err}")
+            raise RuntimeError(f"DataBase error while fetching users!!!\n{err}")
 
         if not users:
             raise HTTPException(
@@ -125,7 +125,7 @@ class OperationDB:
         try:
             debtors = self._conn.scalars(stmt).all()
         except SQLAlchemyError as err:
-            raise RuntimeError(f"DataBase error while fetching debtors!!!\t{err}")
+            raise RuntimeError(f"DataBase error while fetching debtors!!!\n{err}")
 
         if not debtors:
             raise HTTPException(
@@ -143,12 +143,26 @@ class OperationDB:
         try:
             txn = self._conn.scalars(stmt).all()
         except SQLAlchemyError as err:
-            raise RuntimeError(f"DataBase error while fethcing transactions!!!\t{err}")
+            raise RuntimeError(f"DataBase error while fethcing transactions!!!\n{err}")
 
         if not txn:
             raise HTTPException(
                 status_code=404,
                 detail="Transactions not found!!!"
             )
+
+        return txn
+
+
+    def user_txn(self, user_id):
+        stmt = (
+            select(Transaction).where(
+                Transaction.user_id == user_id
+            ).with_for_update()
+        )
+        try:
+            txn = self._conn.scalars(stmt).all()
+        except SQLAlchemyError as err:
+            raise RuntimeError(f"Database error while fetching user transactions!!!\n{err}")
 
         return txn

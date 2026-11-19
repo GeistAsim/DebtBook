@@ -5,7 +5,11 @@ from app.database.crud import OperationDB
 from app.model.model import debtor_entitys, txn_entitys
 
 
+# Get Router Initialization
 get_router = APIRouter()
+
+
+""" Debtor's details get endpoint """
 
 @get_router.get("/all/debtors")
 async def debtors():
@@ -33,12 +37,41 @@ async def debtors():
         )
 
 
+""" Transaction's details get endpoint """
+
 @get_router.get("/all/transactions")
 async def txn():
     crud = OperationDB()
 
     try:
         txn_obj = crud.all_txn()
+        txn_lst = txn_entitys(txn_obj)
+
+        if len(txn_lst) > 0:
+            return JSONResponse(status_code=200, content=txn_lst)
+
+        raise HTTPException(
+            status_code=400,
+            detail="Bad Request!!!"
+        )
+
+    except HTTPException:
+        raise
+
+    except Exception as err:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Server Error: {err}"
+        )
+
+
+@get_router.get("/user/transactions")
+async def user_all_txn():
+    crud = OperationDB()
+    user_id = 1
+
+    try:
+        txn_obj = crud.user_txn(user_id=user_id)
         txn_lst = txn_entitys(txn_obj)
 
         if len(txn_lst) > 0:
