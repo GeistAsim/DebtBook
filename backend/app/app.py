@@ -7,11 +7,13 @@ from app.database.db import Base, engine
 from app.database.tables import Customer, TxnType, User
 from app.database.crud import OperationDB
 from app.user import auth_router
+from app.get import get_router
 
 app = FastAPI(title="Debt Book")
 
 # include router
 app.include_router(auth_router)
+app.include_router(get_router)
 
 # Create the tables
 Base.metadata.create_all(engine)

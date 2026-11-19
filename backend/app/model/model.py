@@ -6,6 +6,7 @@ def moment_spliter(moment: datetime) -> dict:
         "time": moment.strftime("%I:%M %p")
     }
 
+""" User Model """
 def user_entity(item) -> dict:
     return {
         "id": item.id,
@@ -19,3 +20,19 @@ def user_entity(item) -> dict:
 
 def user_entitys(items) -> list:
     return [user_entity(item) for item in items]
+
+
+""" Debtor Model """
+def debtor_entity(item) -> dict:
+    return {
+        "id": item.id,
+        "user_id": item.user_id,
+        "name": item.name,
+        "mobile_no": item.mobile_no,
+        "net_balance": float(item.net_balance),
+        "created_at": moment_spliter(item.created_at),
+        "updated_at": moment_spliter(item.updated_at)
+    }
+
+def debtor_entitys(items) -> list:
+    return [debtor_entity(item) for item in items]

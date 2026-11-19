@@ -112,7 +112,25 @@ class OperationDB:
         if not users:
             raise HTTPException(
                 status_code=404,
-                detail="User not found!!!"
+                detail="Users not found!!!"
             )
 
         return users
+
+
+    def all_debtors(self) -> list:
+        stmt = (
+            select(Customer).with_for_update()
+        )
+        try:
+            debtors = self._conn.scalars(stmt).all()
+        except SQLAlchemyError as err:
+            raise RuntimeError(f"DataBase error while fetching debtors!!!\t{err}")
+
+        if not debtors:
+            raise HTTPException(
+                status_code=404,
+                detail="Debtors not found!!!"
+            )
+
+        return debtors
