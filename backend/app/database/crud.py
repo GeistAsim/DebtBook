@@ -134,3 +134,21 @@ class OperationDB:
             )
 
         return debtors
+
+
+    def all_txn(self) -> list:
+        stmt = (
+            select(Transaction).with_for_update()
+        )
+        try:
+            txn = self._conn.scalars(stmt).all()
+        except SQLAlchemyError as err:
+            raise RuntimeError(f"DataBase error while fethcing transactions!!!\t{err}")
+
+        if not txn:
+            raise HTTPException(
+                status_code=404,
+                detail="Transactions not found!!!"
+            )
+
+        return txn

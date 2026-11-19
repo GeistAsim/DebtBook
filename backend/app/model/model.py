@@ -36,3 +36,19 @@ def debtor_entity(item) -> dict:
 
 def debtor_entitys(items) -> list:
     return [debtor_entity(item) for item in items]
+
+
+""" Transaction Model """
+def txn_entity(item) -> dict:
+    return {
+        "id": item.id,
+        "user_id": item.user_id,
+        "customer_id": item.customer_id,
+        "txn_type": item.txn_type,
+        "amount": float(item.amount),
+        "new_balance": float(item.new_balance),
+        "txn_date": moment_spliter(item.txn_date)
+    }
+
+def txn_entitys(items) -> list:
+    return [txn_entity(item) for item in items]

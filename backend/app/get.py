@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from app.database.crud import OperationDB
-from app.model.model import debtor_entitys
+from app.model.model import debtor_entitys, txn_entitys
 
 
 get_router = APIRouter()
@@ -19,7 +19,7 @@ async def debtors():
             return JSONResponse(status_code=200, content=debtors_lst)
         
         raise HTTPException(
-            status_code=404,
+            status_code=400,
             details="Bad Request!!!"
         )
 
@@ -29,5 +29,31 @@ async def debtors():
     except Exception as err:
         raise HTTPException(
             status_code=500,
-            detail=f"Server error: {str(err)}"
+            detail=f"Server Error: {str(err)}"
+        )
+
+
+@get_router.get("/all/transactions")
+async def txn():
+    crud = OperationDB()
+
+    try:
+        txn_obj = crud.all_txn()
+        txn_lst = txn_entitys(txn_obj)
+
+        if len(txn_lst) > 0:
+            return JSONResponse(status_code=200, content=txn_lst)
+
+        raise HTTPException(
+            status_code=400,
+            detail="Bad Request!!!"
+        )
+
+    except HTTPException:
+        raise
+
+    except Exception as err:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Server Error: {err}"
         )
