@@ -136,6 +136,26 @@ class OperationDB:
         return debtors
 
 
+    def user_debtors(self, user_id):
+        stmt = (
+            select(Customer).where(
+                Customer.user_id == user_id
+            ).with_for_update()
+        )
+        try:
+            debtors = self._conn.scalars(stmt).all()
+        except SQLAlchemyError as err:
+            raise RuntimeError(f"DataBase error while fetching user debtors!!!\n{err}")
+
+        if not debtors:
+            raise HTTPException(
+                status_code=404,
+                detail="debtors not found!!!"
+            )
+
+        return debtors
+
+
     def all_txn(self) -> list:
         stmt = (
             select(Transaction).with_for_update()

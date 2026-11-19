@@ -37,6 +37,33 @@ async def debtors():
         )
 
 
+@get_router.get("/user/debtors")
+async def debtors_fltr(user_id: int | None = None):
+    user_id = user_id if user_id else 1
+    crud = OperationDB()
+
+    try:
+        debtor_obj = crud.user_debtors(user_id=user_id)
+        debtors_lst = debtor_entitys(debtor_obj)
+
+        if len(debtors_lst) > 0:
+            return JSONResponse(status_code=200, content=debtors_lst)
+        
+        raise HTTPException(
+            status_code=400,
+            detail="Bad Request!!!"
+        )
+
+    except HTTPException:
+        raise
+
+    except Exception as err:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Server Error: {err}"
+        )
+
+
 """ Transaction's details endpoint """
 
 @get_router.get("/all/transactions")
