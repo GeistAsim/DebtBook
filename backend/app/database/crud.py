@@ -154,12 +154,20 @@ class OperationDB:
         return txn
 
 
-    def user_txn(self, user_id):
-        stmt = (
-            select(Transaction).where(
-                Transaction.user_id == user_id
-            ).with_for_update()
-        )
+    def user_txn(self, user_id: int, customer_id: int | None = None):
+        if customer_id is not None:
+            stmt = (
+                select(Transaction).where(
+                    Transaction.user_id == user_id,
+                    Transaction.customer_id == customer_id
+                ).with_for_update()
+            )
+        else:
+            stmt = (
+                select(Transaction).where(
+                    Transaction.user_id == user_id
+                ).with_for_update()
+            )
         try:
             txn = self._conn.scalars(stmt).all()
         except SQLAlchemyError as err:

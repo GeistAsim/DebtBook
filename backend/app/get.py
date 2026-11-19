@@ -37,7 +37,7 @@ async def debtors():
         )
 
 
-""" Transaction's details get endpoint """
+""" Transaction's details endpoint """
 
 @get_router.get("/all/transactions")
 async def txn():
@@ -66,12 +66,17 @@ async def txn():
 
 
 @get_router.get("/user/transactions")
-async def user_all_txn():
+async def user_txn_fltr(
+    customer_id: int | None = None
+):
     crud = OperationDB()
     user_id = 1
 
     try:
-        txn_obj = crud.user_txn(user_id=user_id)
+        if customer_id is not None:
+            txn_obj = crud.user_txn(user_id=user_id, customer_id=customer_id)
+        else:
+            txn_obj = crud.user_txn(user_id=user_id)
         txn_lst = txn_entitys(txn_obj)
 
         if len(txn_lst) > 0:
