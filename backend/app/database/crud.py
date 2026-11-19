@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from app.database.db import Base, engine, SessionLocal
-from app.database.tables import User, Customer, Transaction, TxnType
+from app.database.tables import User, Debtor, Transaction, TxnType
 
 class OperationDB:
     def __init__(self):
@@ -14,17 +14,17 @@ class OperationDB:
         return "CRUD operations support for DB"
 
 
-    def _is_valid_customer(self, customer_id: int, user_id: int):
-        """Check customer is valid for shop owner or not"""
+    def _is_valid_debtor(self, debtor_id: int, user_id: int):
+        """Check debtor is valid for shop owner or not"""
         stmt = (
-            select(Customer).where(
-                Customer.id == customer_id,
-                Customer.user_id == user_id
+            select(Debtor).where(
+                Debtor.id == debtor_id,
+                Debtor.user_id == user_id
             ).with_for_update()
         )
 
-        customer = self._conn.scalars(stmt).one_or_none()
-        if customer is not None: return customer
+        debtor = self._conn.scalars(stmt).one_or_none()
+        if debtor is not None: return debtor
 
         return None
 
@@ -33,7 +33,7 @@ class OperationDB:
             self,
             username: str,
             name: str,
-            shop_name: str,
+            business_name: str,
             email: str,
             mobile_no: str,
             password_hash: str
@@ -42,7 +42,7 @@ class OperationDB:
         user = User(
             username=username,
             name=name,
-            shop_name=shop_name,
+            business_name=business_name,
             email=email,
             mobile_no=mobile_no,
             password_hash=password_hash
@@ -52,48 +52,48 @@ class OperationDB:
         return result
 
 
-    def create_new_customer(self, user_id: int, name: str, mobile_no: str | None = None) -> Customer:
-        """create new customer"""
-        customer = Customer(
+    def create_new_debtor(self, user_id: int, name: str, mobile_no: str | None = None) -> Debtor:
+        """create new debtor"""
+        debtor = Debtor(
             user_id=user_id,
             name=name,
             mobile_no=mobile_no
         )
-        self._conn.add(customer)
+        self._conn.add(debtor)
         self._conn.commit()
-        return customer
+        return debtor
 
     def new_txn(
             self,
             user_id: int,
-            customer_id: int,
+            debtor_id: int,
             txn_type: TxnType,
             amount: Decimal,
     ) -> Transaction:
-        """Insert a ledger entry and update customer balance automatically."""
+        """Insert a ledger entry and update debtor balance automatically."""
         # check amount
         amount = Decimal(amount)
         if amount < 0: raise ValueError("Amount must be positive!!!")
 
-        customer = self._is_valid_customer(customer_id=customer_id, user_id=user_id)
+        debtor = self._is_valid_debtor(debtor_id=debtor_id, user_id=user_id)
 
-        # check customer is valid for user & exist or not
-        if customer is None: raise LookupError("Customer not found!!!")
+        # check debtor is valid for user & exist or not
+        if debtor is None: raise LookupError("Debtor not found!!!")
 
         # check Transaction type
         if txn_type == TxnType.debt:
-            customer.net_balance += amount
+            debtor.net_balance += amount
         elif txn_type == TxnType.payment:
-            customer.net_balance -= amount
+            debtor.net_balance -= amount
         else:
             raise ValueError("Invalid! transaction type")
 
         txn = Transaction(
             user_id=user_id,
-            customer_id=customer_id,
+            debtor_id=debtor_id,
             txn_type=txn_type,
             amount=amount,
-            new_balance=customer.net_balance
+            new_balance=debtor.net_balance
         ) 
         self._conn.add(txn) 
         self._conn.commit()
@@ -120,7 +120,7 @@ class OperationDB:
 
     def all_debtors(self) -> list:
         stmt = (
-            select(Customer).with_for_update()
+            select(Debtor).with_for_update()
         )
         try:
             debtors = self._conn.scalars(stmt).all()
@@ -138,8 +138,8 @@ class OperationDB:
 
     def user_debtors(self, user_id):
         stmt = (
-            select(Customer).where(
-                Customer.user_id == user_id
+            select(Debtor).where(
+                Debtor.user_id == user_id
             ).with_for_update()
         )
         try:
@@ -174,12 +174,12 @@ class OperationDB:
         return txn
 
 
-    def user_txn(self, user_id: int, customer_id: int | None = None):
-        if customer_id is not None:
+    def user_txn(self, user_id: int, debtor_id: int | None = None):
+        if debtor_id is not None:
             stmt = (
                 select(Transaction).where(
                     Transaction.user_id == user_id,
-                    Transaction.customer_id == customer_id
+                    Transaction.debtor_id == debtor_id
                 ).with_for_update()
             )
         else:

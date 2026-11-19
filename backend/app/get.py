@@ -94,16 +94,17 @@ async def txn():
 
 @get_router.get("/user/transactions")
 async def user_txn_fltr(
-    customer_id: int | None = None
+    debtor_id: int | None = None
 ):
     crud = OperationDB()
     user_id = 1
 
     try:
-        if customer_id is not None:
-            txn_obj = crud.user_txn(user_id=user_id, customer_id=customer_id)
+        if debtor_id is not None:
+            txn_obj = crud.user_txn(user_id=user_id, debtor_id=debtor_id)
         else:
             txn_obj = crud.user_txn(user_id=user_id)
+
         txn_lst = txn_entitys(txn_obj)
 
         if len(txn_lst) > 0:

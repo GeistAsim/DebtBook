@@ -12,7 +12,7 @@ def user_entity(item) -> dict:
         "id": item.id,
         "username": item.username,
         "name": item.name,
-        "shop_name": item.shop_name,
+        "business_name": item.business_name,
         "mobile_no": item.mobile_no,
         "email": item.email,
         "created_at": moment_spliter(item.created_at)
@@ -43,7 +43,7 @@ def txn_entity(item) -> dict:
     return {
         "id": item.id,
         "user_id": item.user_id,
-        "customer_id": item.customer_id,
+        "debtor_id": item.debtor_id,
         "txn_type": item.txn_type,
         "amount": float(item.amount),
         "new_balance": float(item.new_balance),

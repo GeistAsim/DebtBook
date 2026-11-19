@@ -3,7 +3,7 @@ from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
 from app.schema.schema import NewUser
 from app.database.db import Base, engine
-from app.database.tables import Customer, TxnType, User
+from app.database.tables import User
 from app.database.crud import OperationDB 
 from app.model.model import user_entitys
 
@@ -44,7 +44,7 @@ async def new_user(data: NewUser):
         result = crud.create_new_user(
             username=data["username"],
             name=data["name"],
-            shop_name=data["shop_name"],
+            business_name=data["business_name"],
             email=data["email"],
             mobile_no=data["mobile_no"],
             password_hash=data["password_hash"]

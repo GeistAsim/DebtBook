@@ -1,13 +1,13 @@
 from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
-""" User authetication """
+""" User & authetication """
 
 class NewUser(BaseModel):
     username: str
     password_hash: str
     name: str
-    shop_name: str
+    business_name: str
     mobile_no: str
     email: str
 
@@ -40,9 +40,9 @@ class NewTokenData(BaseModel):
     token: str | None = None
     
 
-""" Customer """
+""" Debtor """
 
-class NewCustomer(BaseModel):
+class NewDebtor(BaseModel):
     name: str
     mobile_no: str | None = None
 
@@ -50,6 +50,6 @@ class NewCustomer(BaseModel):
 """ Transactions """
 
 class Txn(BaseModel):
-    customer_id: int
+    debtor_id: int
     txn_type: Literal["DEBT", "PAYMENT"]
     amount: int

@@ -31,7 +31,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(BigInt, primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     name: Mapped[str] = mapped_column(String(64), nullable=False)
-    shop_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    business_name: Mapped[str] = mapped_column(String(64), nullable=False)
     email: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
     mobile_no: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -39,7 +39,7 @@ class User(Base):
         DateTime(timezone=True), default=ist_now
     )
 
-    customer: Mapped[list["Customer"]] = relationship(
+    debtor: Mapped[list["Debtor"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan"
     )
@@ -50,13 +50,13 @@ class User(Base):
     )
 
     def __repr__(self) -> str:
-        return f"User (user_id={self.id}, shop_name={self.shop_name}, name={self.name})"
+        return f"User (user_id={self.id}, business_name={self.business_name}, name={self.name})"
 
 
 
-class Customer(Base):
-    """A Shop customer who buys on credit"""
-    __tablename__ = "customers"
+class Debtor(Base):
+    """A Shop debtor who buys on credit"""
+    __tablename__ = "debtors"
 
     id: Mapped[int] = mapped_column(BigInt, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
@@ -66,7 +66,7 @@ class Customer(Base):
     name: Mapped[str] = mapped_column(String(64), nullable=False)
     mobile_no: Mapped[str | None] = mapped_column(String(20))
 
-    # Amount the customer currently owes the Shop
+    # Amount the debtor currently owes the Shop
     net_balance: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0.00"))
 
     created_at: Mapped[datetime] = mapped_column(
@@ -76,9 +76,9 @@ class Customer(Base):
         DateTime(timezone=True), default=ist_now, onupdate=ist_now
     )
 
-    user: Mapped["User"] = relationship(back_populates="customer")
+    user: Mapped["User"] = relationship(back_populates="debtor")
     transactions: Mapped[list["Transaction"]] = relationship(
-        back_populates="customer",
+        back_populates="debtor",
         cascade="all, delete-orphan",
         order_by="Transaction.txn_date"
     )
@@ -89,15 +89,15 @@ class Transaction(Base):
     __tablename__ = "transactions"
     __table_args__ = (
         CheckConstraint("amount > 0", name="ck_txn_amount"),
-        Index("idx_txn_customer_date", "customer_id", "txn_date")
+        Index("idx_txn_debtor_date", "debtor_id", "txn_date")
     )
 
     id: Mapped[int] = mapped_column(BigInt, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
         BigInt, ForeignKey("users.id", ondelete="CASCADE")
     )
-    customer_id: Mapped[int] = mapped_column(
-        BigInt, ForeignKey("customers.id", ondelete="CASCADE")
+    debtor_id: Mapped[int] = mapped_column(
+        BigInt, ForeignKey("debtors.id", ondelete="CASCADE")
     )
 
     txn_type: Mapped[TxnType] = mapped_column(SQLEnum(TxnType))
@@ -110,6 +110,6 @@ class Transaction(Base):
     user: Mapped["User"] = relationship(
         back_populates="transactions"
     )
-    customer: Mapped["Customer"] = relationship(
+    debtor: Mapped["Debtor"] = relationship(
         back_populates="transactions"
     )

@@ -2,9 +2,9 @@ from decimal import Decimal
 from fastapi import FastAPI
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
-from app.schema.schema import Txn, NewCustomer
+from app.schema.schema import Txn, NewDebtor
 from app.database.db import Base, engine
-from app.database.tables import Customer, TxnType, User
+from app.database.tables import User, Debtor, TxnType
 from app.database.crud import OperationDB
 from app.user import auth_router
 from app.get import get_router
@@ -32,7 +32,7 @@ async def new_txn(data: Txn):
     
     try:
         crud = OperationDB()
-        txn = crud.new_txn(user_id=2, customer_id=data["customer_id"], txn_type=data["txn_type"], amount=data["amount"])
+        txn = crud.new_txn(user_id=1, debtor_id=data["debtor_id"], txn_type=data["txn_type"], amount=data["amount"])
 
     except Exception as err:
         raise HTTPException(
@@ -43,13 +43,13 @@ async def new_txn(data: Txn):
     return JSONResponse(status_code=201, content="Transaction Successful")
     
 
-@app.post("/new/customer", response_model=NewCustomer)
-async def new_customer(data: NewCustomer):
+@app.post("/new/debtor", response_model=NewDebtor)
+async def new_debtor(data: NewDebtor):
     data = data.model_dump()
 
     try:
         crud = OperationDB()
-        customer = crud.create_new_customer(user_id=2, name=data["name"], mobile_no=data["mobile_no"] if "mobile_no" in data else None)
+        debtor = crud.create_new_debtor(user_id=1, name=data["name"], mobile_no=data["mobile_no"] if "mobile_no" in data else None)
 
     except Exception as err:
         raise HTTPException(
@@ -57,4 +57,4 @@ async def new_customer(data: NewCustomer):
             detail=f"DataBase error: {str(err)}"
         ) 
 
-    return JSONResponse(status_code=201, content="Customer Inserted Seccussfully")
+    return JSONResponse(status_code=201, content="Debtor Inserted Seccussfully")
