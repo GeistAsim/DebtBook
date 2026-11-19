@@ -1,5 +1,7 @@
 from decimal import Decimal
+from fastapi import HTTPException
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from app.database.db import Base, engine, SessionLocal
 from app.database.tables import User, Customer, Transaction, TxnType
@@ -45,10 +47,9 @@ class OperationDB:
             mobile_no=mobile_no,
             password_hash=password_hash
         )
-        print(user)
-        self._conn.add(user)
-        self._conn.commit()
-        return user
+        result = self._conn.add(user)
+        result = self._conn.commit()
+        return result
 
 
     def create_new_customer(self, user_id: int, name: str, mobile_no: str | None = None) -> Customer:
@@ -93,9 +94,8 @@ class OperationDB:
             txn_type=txn_type,
             amount=amount,
             new_balance=customer.net_balance
-        )
-
-        self._conn.add(txn)
+        ) 
+        self._conn.add(txn) 
         self._conn.commit()
         return txn
 
@@ -106,6 +106,13 @@ class OperationDB:
         )
         try:
             users = self._conn.scalars(stmt).all()
-            return users
-        except Exception as err:
-            raise ValueError(f"Users not found!!!\n{err}")
+        except SQLAlchemyError as err:
+            raise RuntimeError(f"DataBase error while fetching users!!!\t{err}")
+
+        if not users:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found!!!"
+            )
+
+        return users

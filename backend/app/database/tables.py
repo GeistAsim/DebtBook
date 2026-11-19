@@ -15,7 +15,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.database.db import Base, BigInt
 
 
-def utc_now():
+def ist_now() -> datetime:
     return datetime.now(ZoneInfo("Asia/Kolkata"))
 
 
@@ -36,7 +36,7 @@ class User(Base):
     mobile_no: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now()
+        DateTime(timezone=True), default=ist_now
     )
 
     customer: Mapped[list["Customer"]] = relationship(
@@ -70,10 +70,10 @@ class Customer(Base):
     net_balance: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0.00"))
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now()
+        DateTime(timezone=True), default=ist_now
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now(), onupdate=utc_now()
+        DateTime(timezone=True), default=ist_now, onupdate=ist_now
     )
 
     user: Mapped["User"] = relationship(back_populates="customer")
@@ -104,7 +104,7 @@ class Transaction(Base):
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     new_balance: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     txn_date: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now()
+        DateTime(timezone=True), default=ist_now
     )
 
     user: Mapped["User"] = relationship(

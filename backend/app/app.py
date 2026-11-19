@@ -24,31 +24,35 @@ data_exception = HTTPException(
 )
 
 
-@app.get("/check")
-async def check():
-    crud = OperationDB()
-    result = crud
-    return result
-
-
 @app.post("/new/transaction", response_model=Txn)
 async def new_txn(data: Txn):
     data = data.model_dump()
-    # try:
-    crud = OperationDB()
-    txn = crud.new_txn(user_id=1, customer_id=data["customer_id"], txn_type=data["txn_type"], amount=data["amount"])
-    return JSONResponse(status_code=200, content="Transaction Successful")
-    # except:
-    #     raise data_exception
+    
+    try:
+        crud = OperationDB()
+        txn = crud.new_txn(user_id=1, customer_id=data["customer_id"], txn_type=data["txn_type"], amount=data["amount"])
+
+    except Exception as err:
+        raise HTTPException(
+            status_code=500,
+            detail=f"DataBase error: {str(err)}"
+        ) 
+
+    return JSONResponse(status_code=201, content="Transaction Successful")
     
 
 @app.post("/new/customer", response_model=NewCustomer)
 async def new_customer(data: NewCustomer):
     data = data.model_dump()
-    print(data)
+
     try:
         crud = OperationDB()
         customer = crud.create_new_customer(user_id=1, name=data["name"], mobile_no=data["mobile_no"] if "mobile_no" in data else None)
-        return JSONResponse(status_code=200, content="New Customer Added")
-    except:
-        raise data_exception
+
+    except Exception as err:
+        raise HTTPException(
+            status_code=500,
+            detail=f"DataBase error: {str(err)}"
+        ) 
+
+    return JSONResponse(status_code=201, content="Customer Inserted Seccussfully")
