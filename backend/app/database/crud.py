@@ -1,4 +1,5 @@
 from decimal import Decimal
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.database.db import Base, engine, SessionLocal
 from app.database.tables import User, Customer, Transaction, TxnType
@@ -13,8 +14,16 @@ class OperationDB:
 
     def _is_valid_customer(self, customer_id: int, user_id: int):
         """Check customer is valid for shop owner or not"""
-        customer = self._conn.query(Customer).filter(Customer.id == customer_id, Customer.user_id == user_id).with_for_update().one_or_none()
+        stmt = (
+            select(Customer).where(
+                Customer.id == customer_id,
+                Customer.user_id == user_id
+            ).with_for_update()
+        )
+
+        customer = self._conn.scalars(stmt).one_or_none()
         if customer is not None: return customer
+
         return None
 
 
@@ -36,6 +45,7 @@ class OperationDB:
             mobile_no=mobile_no,
             password_hash=password_hash
         )
+        print(user)
         self._conn.add(user)
         self._conn.commit()
         return user
@@ -88,3 +98,14 @@ class OperationDB:
         self._conn.add(txn)
         self._conn.commit()
         return txn
+
+
+    def all_users(self) -> list:
+        stmt = (
+            select(User).with_for_update()
+        )
+        try:
+            users = self._conn.scalars(stmt).all()
+            return users
+        except Exception as err:
+            raise ValueError(f"Users not found!!!\n{err}")

@@ -5,9 +5,11 @@ from pydantic import BaseModel, ConfigDict
 
 class NewUser(BaseModel):
     username: str
+    password_hash: str
     name: str
+    shop_name: str
     mobile_no: str
-    emial: str
+    email: str
 
 
 class User(BaseModel):

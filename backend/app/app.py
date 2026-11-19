@@ -6,8 +6,12 @@ from app.schema.schema import Txn, NewCustomer
 from app.database.db import Base, engine
 from app.database.tables import Customer, TxnType, User
 from app.database.crud import OperationDB
+from app.user import auth_router
 
 app = FastAPI(title="Debt Book")
+
+# include router
+app.include_router(auth_router)
 
 # Create the tables
 Base.metadata.create_all(engine)
@@ -20,16 +24,23 @@ data_exception = HTTPException(
 )
 
 
+@app.get("/check")
+async def check():
+    crud = OperationDB()
+    result = crud
+    return result
+
+
 @app.post("/new/transaction", response_model=Txn)
 async def new_txn(data: Txn):
     data = data.model_dump()
-    try:
-        crud = OperationDB()
-        txn = crud.new_txn(user_id=1, customer_id=data["customer_id"], txn_type=data["txn_type"], amount=data["amount"])
-        return JSONResponse(status_code=200, content="Transaction Successful")
-    except:
-        raise data_exception
-
+    # try:
+    crud = OperationDB()
+    txn = crud.new_txn(user_id=1, customer_id=data["customer_id"], txn_type=data["txn_type"], amount=data["amount"])
+    return JSONResponse(status_code=200, content="Transaction Successful")
+    # except:
+    #     raise data_exception
+    
 
 @app.post("/new/customer", response_model=NewCustomer)
 async def new_customer(data: NewCustomer):

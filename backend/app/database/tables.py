@@ -50,7 +50,7 @@ class User(Base):
     )
 
     def __repr__(self) -> str:
-        return f"User (user_id={self.user_id}, shop_name={self.shop_name}, user_name={self.user_name})"
+        return f"User (user_id={self.id}, shop_name={self.shop_name}, name={self.name})"
 
 
 
