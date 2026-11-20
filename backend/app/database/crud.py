@@ -14,6 +14,9 @@ class OperationDB:
         return "CRUD operations support for DB"
 
 
+
+    """ Helper methods """
+
     def _is_valid_debtor(self, debtor_id: int, user_id: int):
         """Check debtor is valid for shop owner or not"""
         stmt = (
@@ -29,6 +32,10 @@ class OperationDB:
         return None
 
 
+
+    """ Write Operation Section """
+
+    # User Section
     def create_new_user(
             self,
             username: str,
@@ -49,9 +56,10 @@ class OperationDB:
         )
         result = self._conn.add(user)
         result = self._conn.commit()
-        return result
+        return result 
 
 
+    # Debtor Section
     def create_new_debtor(self, user_id: int, name: str, mobile_no: str | None = None) -> Debtor:
         """create new debtor"""
         debtor = Debtor(
@@ -63,12 +71,14 @@ class OperationDB:
         self._conn.commit()
         return debtor
 
+
+    # Transaction Section
     def new_txn(
             self,
             user_id: int,
             debtor_id: int,
             txn_type: TxnType,
-            amount: Decimal,
+            amount: float,
     ) -> Transaction:
         """Insert a ledger entry and update debtor balance automatically."""
         # check amount
@@ -100,6 +110,11 @@ class OperationDB:
         return txn
 
 
+
+
+    """ Read Operations Section """
+
+    # User Section
     def all_users(self) -> list:
         stmt = (
             select(User).with_for_update()
@@ -118,6 +133,11 @@ class OperationDB:
         return users
 
 
+    def look_user(self, user_id: int | None):
+        pass
+
+
+    # Debtor Section
     def all_debtors(self) -> list:
         stmt = (
             select(Debtor).with_for_update()
@@ -156,6 +176,7 @@ class OperationDB:
         return debtors
 
 
+    # Transaction Section
     def all_txn(self) -> list:
         stmt = (
             select(Transaction).with_for_update()
@@ -192,5 +213,11 @@ class OperationDB:
             txn = self._conn.scalars(stmt).all()
         except SQLAlchemyError as err:
             raise RuntimeError(f"Database error while fetching user transactions!!!\n{err}")
+
+        if not txn:
+            raise HTTPException(
+                status_code=404,
+                detail="Transactions not found!!!"
+            )
 
         return txn

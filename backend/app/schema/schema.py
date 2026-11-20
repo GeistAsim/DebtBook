@@ -52,4 +52,4 @@ class NewDebtor(BaseModel):
 class Txn(BaseModel):
     debtor_id: int
     txn_type: Literal["DEBT", "PAYMENT"]
-    amount: int
+    amount: float
