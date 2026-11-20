@@ -19,6 +19,7 @@ def ist_now() -> datetime:
     return datetime.now(ZoneInfo("Asia/Kolkata"))
 
 
+# Transaction Type
 class TxnType(str, enum.Enum):
     debt = "DEBT"
     payment = "PAYMENT"

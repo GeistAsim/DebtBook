@@ -1,11 +1,11 @@
 from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
-""" User & authetication """
+""" User & Token """
 
 class NewUser(BaseModel):
     username: str
-    password_hash: str
+    password: str
     name: str
     business_name: str
     mobile_no: str

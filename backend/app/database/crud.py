@@ -115,6 +115,7 @@ class OperationDB:
     """ Read Operations Section """
 
     # User Section
+
     def all_users(self) -> list:
         stmt = (
             select(User).with_for_update()
@@ -133,11 +134,44 @@ class OperationDB:
         return users
 
 
-    def look_user(self, user_id: int | None):
-        pass
+    def look_user(self, username: str | None = None):
+        if username is not None:
+            stmt = (
+                select(User).where(
+                    User.username == username
+                ).with_for_update()
+            )
+        
+        elif username is None:
+            stmt = (
+                select(User).order_by(User.name).with_for_update()
+            )
+            
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid!!! Bad Request"
+            )
+
+        try:
+            user = self._conn.scalars(stmt).one_or_none()
+        except SQLAlchemyError as err:
+            raise RuntimeError(f"DataBase error while checking user id: {username}!!!\n{err}")
+
+        # Return None if user not found!!!
+        if not user:
+            return None
+
+        # Return Requested user only
+        if username is not None:
+            return user
+
+        # Return all users
+        return [user]
 
 
     # Debtor Section
+
     def all_debtors(self) -> list:
         stmt = (
             select(Debtor).with_for_update()
@@ -177,6 +211,7 @@ class OperationDB:
 
 
     # Transaction Section
+
     def all_txn(self) -> list:
         stmt = (
             select(Transaction).with_for_update()
