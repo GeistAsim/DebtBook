@@ -15,7 +15,8 @@ def user_entity(item) -> dict:
         "business_name": item.business_name,
         "mobile_no": item.mobile_no,
         "email": item.email,
-        "created_at": moment_spliter(item.created_at)
+        "created_at": moment_spliter(item.created_at),
+        "password_hash": item.password_hash
     }
 
 def user_entitys(items) -> list:

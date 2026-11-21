@@ -10,7 +10,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from app.database.crud import OperationDB
 from app.model.model import user_entity, user_entitys
-from app.schema.schema import User, UserInDB
+from app.schema.schema import User, UserInDB, Token
 
 load_dotenv()
 
@@ -97,7 +97,7 @@ class UserAuth:
         
 
     # check user authentication
-    def authenticate_user(self, username: str, password: str) -> bool:
+    def authenticate_user(self, username: str, password: str):
         user = self.is_registered_user(username=username, with_pass=True)
 
         # if user is not registered
@@ -107,20 +107,31 @@ class UserAuth:
         if not self._verify_password(password, user.password_hash):
             return False
 
-        return True
+        token_data = {
+            "username": user.username
+        }
+
+        access_token = self._create_access_token(
+            data=token_data,
+            expires_delta_min=self._ACCESS_TOKEN_EXPIRE_MINUTES
+        )
+        return Token(
+            access_token=access_token,
+            token_type='bearer'
+        )
 
 
-    """ Token Section """
+    """ Token Handling Section """
 
     # New token encoding
-    def create_access_token(self, data: dict, expires_delta: timedelta | None = None):
+    def _create_access_token(self, data: dict, expires_delta_min: int | None = None):
         to_encode = data.copy()
 
-        if expires_delta:
-            expire = self._ist_now + expires_delta
+        if expires_delta_min:
+            expire = self._ist_now + timedelta(minutes=expires_delta_min)
 
         else:
-            expires_delta = self._ist_now + timedelta(minutes=2)
+            expire = self._ist_now + timedelta(minutes=2)
 
         to_encode.update({"exp": expire})
         encode_jwt = jwt.encode(to_encode, self.__SECRET_KEY, self._ALGORITHM)
@@ -130,10 +141,8 @@ class UserAuth:
     # Decode token
     def decode_token(self, token: Annotated[str, Depends(oauth_schema)]): 
         try:
-            payload = jwt.decode(token, self.__SECRET_KEY, alogorithm=[self._ALGORITHM], options={"verify_exp": True})
-            username = payload.get("username")
-            expiration_time = payload.get("exp")
-            return
+            payload = jwt.decode(token, self.__SECRET_KEY, algorithms=[self._ALGORITHM], options={"verify_exp": True})
+            return payload
 
         except InvalidTokenError as err:
             if isinstance(err, ExpiredSignatureError) or str(err) == "Signature has expired":
@@ -141,4 +150,32 @@ class UserAuth:
                     status_code=400,
                     detail="Token Expired!!!"
                 )
+            raise self.credentials_exception
+
+
+    """ Token scanning """
+
+    # get current user
+    def get_current_user(self, token: Annotated[str, Depends(oauth_schema)]):
+        try:
+            payload = self.decode_token()
+            username = payload["username"]
+
+            if username is None:
+                raise self.credentials_exception
+
+            user = self.is_registered_user(username=username)
+
+            if not user:
+                raise self.credentials_exception
+
+            return user
+             
+        except InvalidTokenError as err:
+            if isinstance(err, ExpiredSignatureError) or str(err) == "Signature has expired":
+                raise HTTPException(
+                    status_code=400,
+                    detail="Token Expired!!!"
+                )
+            
             raise self.credentials_exception

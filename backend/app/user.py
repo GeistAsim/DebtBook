@@ -1,10 +1,12 @@
+from typing import Annotated
 from fastapi import APIRouter
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, status
 from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from app.auth import UserAuth
-from app.schema.schema import NewUser
+import jwt
+from app.schema.schema import NewUser, User, Token
 from app.database.db import Base, engine
-from app.database.tables import User
 from app.database.crud import OperationDB 
 from app.model.model import user_entitys
 
@@ -17,6 +19,38 @@ auth_router = APIRouter()
 auth = UserAuth()
 
 
+""" Token Section """
+
+# User Credentails
+def current_user_credentials(current_user: Annotated[User, Depends(auth.get_current_user)]):
+    return current_user
+
+
+# check token
+@auth_router.get("/token/check")
+async def check_token(token: str):
+    payload = auth.decode_token(token)
+    return JSONResponse(status_code=200, content=payload)
+
+
+@auth_router.post("/user/login")
+async def user_login(login_credentials: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
+    user_token = auth.authenticate_user(username=login_credentials.username, password=login_credentials.password)
+    
+    # if User Credentails not True
+    if not user_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+ 
+    return user_token
+
+
+""" User Section """
+
+# new user registration
 @auth_router.post("/new/user", response_model=NewUser)
 async def new_user(data: NewUser):
     if auth.is_registered_user(data.username):

@@ -13,12 +13,12 @@ class NewUser(BaseModel):
 
 
 class User(BaseModel):
-    user_id: int
+    id: int
     username: str
     mobile_no: str
     email: str
 
-class UserInDB(BaseModel):
+class UserInDB(User):
     password_hash: str
 
 
@@ -32,8 +32,8 @@ class Token(BaseModel):
     token_type: str
 
 class TokenData(BaseModel):
-    user_id: int | None = None
-    username: str | None = None
+    username: str
+    exp: int
 
 class NewTokenData(BaseModel):
     username: str

@@ -17,8 +17,6 @@ from app.database.db import Base, BigInt
 def ist_now() -> datetime:
     utc_tm = datetime.now(timezone.utc)
     ist_tm = utc_tm + timedelta(hours=5, minutes=30)    
-    print(f"utc: {utc_tm}")
-    print(f"ist: {ist_tm}")
     return ist_tm
 
 # Transaction Type
