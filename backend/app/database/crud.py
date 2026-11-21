@@ -118,7 +118,7 @@ class OperationDB:
 
     def all_users(self) -> list:
         stmt = (
-            select(User).order_by(User.created_at.desc()).with_for_update()
+            select(User).order_by(User.created_at.desc())
         )
         try:
             users = self._conn.scalars(stmt).all()
@@ -139,12 +139,12 @@ class OperationDB:
             stmt = (
                 select(User).where(
                     User.username == username
-                ).with_for_update()
+                )
             )
         
         elif username is None:
             stmt = (
-                select(User).order_by(User.name).with_for_update()
+                select(User).order_by(User.name)
             )
             
         else:
@@ -174,7 +174,7 @@ class OperationDB:
 
     def all_debtors(self) -> list:
         stmt = (
-            select(Debtor).with_for_update()
+            select(Debtor)
         )
         try:
             debtors = self._conn.scalars(stmt).all()
@@ -194,7 +194,7 @@ class OperationDB:
         stmt = (
             select(Debtor).where(
                 Debtor.user_id == user_id
-            ).with_for_update()
+            )
         )
         try:
             debtors = self._conn.scalars(stmt).all()
@@ -214,7 +214,7 @@ class OperationDB:
 
     def all_txn(self) -> list:
         stmt = (
-            select(Transaction).with_for_update()
+            select(Transaction)
         )
         try:
             txn = self._conn.scalars(stmt).all()
@@ -236,13 +236,13 @@ class OperationDB:
                 select(Transaction).where(
                     Transaction.user_id == user_id,
                     Transaction.debtor_id == debtor_id
-                ).order_by(Transaction.txn_date.desc()).with_for_update()
+                ).order_by(Transaction.txn_date.desc())
             )
         else:
             stmt = (
                 select(Transaction).where(
                     Transaction.user_id == user_id
-                ).order_by(Transaction.txn_date.desc()).with_for_update()
+                ).order_by(Transaction.txn_date.desc())
             )
         try:
             txn = self._conn.scalars(stmt).all()
