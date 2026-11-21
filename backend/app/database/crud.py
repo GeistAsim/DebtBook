@@ -118,7 +118,7 @@ class OperationDB:
 
     def all_users(self) -> list:
         stmt = (
-            select(User).with_for_update()
+            select(User).order_by(User.created_at.desc()).with_for_update()
         )
         try:
             users = self._conn.scalars(stmt).all()
@@ -236,13 +236,13 @@ class OperationDB:
                 select(Transaction).where(
                     Transaction.user_id == user_id,
                     Transaction.debtor_id == debtor_id
-                ).with_for_update()
+                ).order_by(Transaction.txn_date.desc()).with_for_update()
             )
         else:
             stmt = (
                 select(Transaction).where(
                     Transaction.user_id == user_id
-                ).with_for_update()
+                ).order_by(Transaction.txn_date.desc()).with_for_update()
             )
         try:
             txn = self._conn.scalars(stmt).all()

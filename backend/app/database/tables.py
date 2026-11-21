@@ -1,6 +1,5 @@
 import enum
-from datetime import datetime, timezone
-from zoneinfo import ZoneInfo
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from sqlalchemy import DateTime
 from sqlalchemy import Enum as SQLEnum
@@ -16,8 +15,11 @@ from app.database.db import Base, BigInt
 
 
 def ist_now() -> datetime:
-    return datetime.now(ZoneInfo("Asia/Kolkata"))
-
+    utc_tm = datetime.now(timezone.utc)
+    ist_tm = utc_tm + timedelta(hours=5, minutes=30)    
+    print(f"utc: {utc_tm}")
+    print(f"ist: {ist_tm}")
+    return ist_tm
 
 # Transaction Type
 class TxnType(str, enum.Enum):
