@@ -1,0 +1,57 @@
+/* ==========================================================================
+   theme.css — colour theme only (light).
+   Every colour in the app comes from here. Nothing else may contain a hex.
+   Palette order is darkest -> lightest, exactly as supplied.
+   ========================================================================== */
+
+:root {
+  /* ---- Raw palette -------------------------------------------------------- */
+  --palette-ink: #06141b;
+  --palette-navy: #11212d;
+  --palette-slate: #253745;
+  --palette-steel: #4a5c6a;
+  --palette-mist: #9ba8ab;
+  --palette-fog: #ccd0cf;
+
+  /* ---- Surfaces ----------------------------------------------------------- */
+  --color-bg: color-mix(in srgb, var(--palette-fog) 28%, white);
+  --color-surface: color-mix(in srgb, var(--palette-fog) 6%, white);
+  --color-surface-sunken: color-mix(in srgb, var(--palette-fog) 45%, white);
+  --color-border: var(--palette-fog);
+  --color-border-strong: var(--palette-mist);
+  --color-overlay: color-mix(in srgb, var(--palette-ink) 45%, transparent);
+  --shadow-color: color-mix(in srgb, var(--palette-ink) 16%, transparent);
+
+  /* ---- Text --------------------------------------------------------------- */
+  --color-text: var(--palette-ink);
+  --color-text-muted: var(--palette-steel);
+  --color-text-placeholder: var(--palette-mist);
+
+  /* ---- Actions ------------------------------------------------------------ */
+  --color-primary: var(--palette-slate);
+  --color-primary-hover: var(--palette-navy);
+  --color-primary-active: var(--palette-ink);
+  --color-on-primary: color-mix(in srgb, var(--palette-fog) 35%, white);
+  --color-focus: var(--palette-steel);
+
+  /* ---- Transaction types (told apart by fill weight, not hue) ------------- */
+  --color-debt-bg: var(--palette-slate);
+  --color-debt-text: var(--color-on-primary);
+  --color-payment-bg: var(--palette-fog);
+  --color-payment-text: var(--palette-navy);
+
+  /* ---- Avatar ------------------------------------------------------------- */
+  --color-avatar-bg: var(--palette-fog);
+  --color-avatar-text: var(--palette-slate);
+
+  /* ---- Hero stat card (the one dark moment on the light theme) ------------ */
+  --color-hero-bg: var(--palette-navy);
+  --color-hero-text: var(--color-on-primary);
+  --color-hero-muted: var(--palette-mist);
+  --color-hero-layer-1: var(--palette-slate);
+  --color-hero-layer-2: var(--palette-steel);
+
+  /* ---- Errors (the only colour outside the palette; used by alert + field errors) */
+  --color-danger: #a23b3b;
+  --color-danger-soft: color-mix(in srgb, var(--color-danger) 8%, white);
+}
