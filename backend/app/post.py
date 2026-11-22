@@ -1,12 +1,16 @@
 from fastapi import APIRouter
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from app.database.crud import OperationDB
 from app.schema.schema import NewDebtor, Txn
+from app.auth import UserAuth
 
+
+# User authentication
+auth = UserAuth()
 
 # Post router intiliazation
-post_router = APIRouter()
+post_router = APIRouter(dependencies=[Depends(auth.get_current_user)])
 
 # HTTP Exception Error
 data_exception = HTTPException(

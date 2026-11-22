@@ -15,8 +15,9 @@ from app.schema.schema import User, UserInDB, Token
 load_dotenv()
 
 # Authentication Schema
-oauth_schema = OAuth2PasswordBearer(tokenUrl="token")
+oauth_schema = OAuth2PasswordBearer(tokenUrl="user/login")
 
+# Token Secrets
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
@@ -93,7 +94,7 @@ class UserAuth:
         if with_pass:
             return UserInDB(**user)
 
-        return user
+        return User(**user)
         
 
     # check user authentication
@@ -139,7 +140,7 @@ class UserAuth:
 
 
     # Decode token
-    def decode_token(self, token: Annotated[str, Depends(oauth_schema)]): 
+    def _decode_token(self, token: Annotated[str, Depends(oauth_schema)]): 
         try:
             payload = jwt.decode(token, self.__SECRET_KEY, algorithms=[self._ALGORITHM], options={"verify_exp": True})
             return payload
@@ -158,7 +159,7 @@ class UserAuth:
     # get current user
     def get_current_user(self, token: Annotated[str, Depends(oauth_schema)]):
         try:
-            payload = self.decode_token()
+            payload = self._decode_token(token=token)
             username = payload["username"]
 
             if username is None:

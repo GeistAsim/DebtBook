@@ -11,23 +11,6 @@ import { Alert } from './components/Notification.jsx';
 const AuthenticatedLayout = () => {
   const { isAuthenticated, alert, dismissAlert } = useDebt();
 
-  async function handLogin() {
-    const formData = {
-      name: "test",
-      mobile_no: "56974585415"
-    }
-    try {
-    const result = await api.debtor_register(formData)
-    if (result) {
-      console.log(result)
-    }
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  handLogin()
-
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }

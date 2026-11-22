@@ -1,12 +1,16 @@
 from fastapi import APIRouter
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException
 from fastapi.responses import JSONResponse
 from app.database.crud import OperationDB
 from app.model.model import debtor_entitys, txn_entitys
+from app.auth import UserAuth
 
+
+# User Authentication
+auth = UserAuth()
 
 # Get Router Initialization
-get_router = APIRouter()
+get_router = APIRouter(dependencies=[Depends(auth.get_current_user)])
 
 
 """ Debtor's details get endpoint """

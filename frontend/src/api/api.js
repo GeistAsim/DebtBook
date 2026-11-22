@@ -53,7 +53,32 @@ export const api = {
     });
 
     return res
-  }
+  },
+
+
+  // -- Transactions --
+  
+  async user_txn_fltr(debtor_id) {
+    let endpoint = `${API_BASE_URL}/user/transactions`
+
+    if (debtor_id) {
+      const params = new URLSearchParams({
+        "debtor_id": debtor_id
+      })
+      endpoint = endpoint +  `?${params}`
+    }
+
+    console.log(endpoint)
+    const res = await fetch(`${endpoint}`, {
+      method: 'GET',
+      headers: {
+        // 'Authorization': `Bearer ${access_token}`,
+        "content-type": "application/json"
+      },
+    });
+
+    return res
+  } 
 
 
 // Exported function close

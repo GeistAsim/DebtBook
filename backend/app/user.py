@@ -11,29 +11,26 @@ from app.database.crud import OperationDB
 from app.model.model import user_entitys
 
 
-# User Authetication & Authorization Router
-auth_router = APIRouter()
-
-
 # User Authetication Object
 auth = UserAuth()
+
+
+# User Authetication & Authorization Router
+auth_router = APIRouter(dependencies=[Depends(auth.get_current_user)])
+
+# Public Routes
+public_router = APIRouter()
 
 
 """ Token Section """
 
 # User Credentails
-def current_user_credentials(current_user: Annotated[User, Depends(auth.get_current_user)]):
-    return current_user
+@auth_router.get("/current/user")
+def current_user(user: Annotated[User, Depends(auth.get_current_user)]):
+    return JSONResponse(status_code=200, content=user.model_dump())
 
 
-# check token
-@auth_router.get("/token/check")
-async def check_token(token: str):
-    payload = auth.decode_token(token)
-    return JSONResponse(status_code=200, content=payload)
-
-
-@auth_router.post("/user/login")
+@public_router.post("/user/login")
 async def user_login(login_credentials: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     user_token = auth.authenticate_user(username=login_credentials.username, password=login_credentials.password)
     
@@ -51,7 +48,7 @@ async def user_login(login_credentials: Annotated[OAuth2PasswordRequestForm, Dep
 """ User Section """
 
 # new user registration
-@auth_router.post("/new/user", response_model=NewUser)
+@public_router.post("/new/user", response_model=NewUser)
 async def new_user(data: NewUser):
     if auth.is_registered_user(data.username):
         raise HTTPException(

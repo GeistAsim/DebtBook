@@ -9,6 +9,18 @@ export const Login = ({ mode = 'login' }) => {
   const navigate = useNavigate();
   const [authError, setAuthError] = useState(null);
 
+
+  async function handLogin() {
+    const formData = {
+      name: "test",
+      mobile_no: "56974585415"
+    }
+    const result = await api.user_txn_fltr()
+      console.log(result)
+  }
+
+  // handLogin()
+
   const {
     register,
     handleSubmit,

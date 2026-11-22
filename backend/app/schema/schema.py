@@ -15,8 +15,10 @@ class NewUser(BaseModel):
 class User(BaseModel):
     id: int
     username: str
+    business_name: str
     mobile_no: str
     email: str
+
 
 class UserInDB(User):
     password_hash: str
