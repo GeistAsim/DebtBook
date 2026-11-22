@@ -12,8 +12,12 @@ const AuthenticatedLayout = () => {
   const { isAuthenticated, alert, dismissAlert } = useDebt();
 
   async function handLogin() {
+    const formData = {
+      name: "test",
+      mobile_no: "56974585415"
+    }
     try {
-    const result = await api.login("tring", "string")
+    const result = await api.debtor_register(formData)
     if (result) {
       console.log(result)
     }
@@ -22,7 +26,7 @@ const AuthenticatedLayout = () => {
     }
   }
 
-  // handLogin()
+  handLogin()
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;

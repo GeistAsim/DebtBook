@@ -37,7 +37,25 @@ export const api = {
     });
 
     return res;
+  },
+
+
+  // -- Debtor --
+  
+  async debtor_register(debtorData) {
+    const res = await fetch(`${API_BASE_URL}/new/debtor`, {
+      method: 'POST',
+      headers: {
+        // 'Authorization': `Bearer ${access_token}`,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify(debtorData)
+    });
+
+    return res
   }
+
+
 // Exported function close
 }
 
