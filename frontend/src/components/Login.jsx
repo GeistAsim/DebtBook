@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
+import { api } from '../api/api.js'
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useDebt } from '../Context/context.jsx';
 import { Alert } from './Notification.jsx';
 
 export const Login = ({ mode = 'login' }) => {
   const isRegister = mode === 'register';
-  const { login, register: registerUser } = useDebt();
   const navigate = useNavigate();
   const [authError, setAuthError] = useState(null);
 
@@ -19,32 +18,48 @@ export const Login = ({ mode = 'login' }) => {
   const onSubmit = async (data) => {
     setAuthError(null);
     try {
+
       if (isRegister) {
-        const res = registerUser(data);
-        if (res.success) {
-          navigate('/');
-        } else {
-          setAuthError({
-            title: 'Registration failed',
-            text: res.error || 'Pick another username.',
-          });
+
+        // Register new user
+        const res = await api.register(data);
+        const status = await res.json();
+
+        if (!res.ok) {
+          const err = {
+            title: `${res.status} ${res.statusText}`,
+            text: `${status.detail}`
+          }
+          setAuthError(err);
+          throw err
         }
+
+        navigate('/login')
+        console.log(status)
+        return status
+
       } else {
-        const res = login(data.username, data.password);
-        if (res.success) {
-          navigate('/');
-        } else {
-          setAuthError({
-            title: "Couldn't log in",
-            text: res.error || 'Incorrect username or password.',
-          });
+
+        // Login user
+        const res = await api.login(data.username, data.password); 
+        const token = await res.json();
+
+        if (!res.ok) {
+          const err = {
+            title: `${res.status} ${res.statusText}`,
+            text: `${token.detail}`
+          }
+          setAuthError(err);
+          throw err
         }
+
+        navigate('/');
+        return token
+
       }
-    } catch {
-      setAuthError({
-        title: 'Error',
-        text: 'Something went wrong. Please try again.',
-      });
+    } catch (err) {
+      console.error(`${err.title}: ${err.text}`)
+      setAuthError(err);
     }
   };
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { api } from './api/api.js'
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { DebtProvider, useDebt } from './Context/context.jsx';
 import Nav from './components/Nav.jsx';
@@ -9,6 +10,19 @@ import { Alert } from './components/Notification.jsx';
 
 const AuthenticatedLayout = () => {
   const { isAuthenticated, alert, dismissAlert } = useDebt();
+
+  async function handLogin() {
+    try {
+    const result = await api.login("tring", "string")
+    if (result) {
+      console.log(result)
+    }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  // handLogin()
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
