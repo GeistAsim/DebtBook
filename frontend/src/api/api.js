@@ -1,9 +1,4 @@
-// import dotenv from 'dotenv';
-
-
-// dotenv.config();
 const API_BASE_URL = import.meta.env.VITE_API
-// const API_BASE_URL = process.env.VITE_API
 
 
 export const api = {
@@ -46,7 +41,7 @@ export const api = {
     const res = await fetch(`${API_BASE_URL}/new/debtor`, {
       method: 'POST',
       headers: {
-        // 'Authorization': `Bearer ${access_token}`,
+        'Authorization': `Bearer ${access_token}`,
         "content-type": "application/json"
       },
       body: JSON.stringify(debtorData)
@@ -57,8 +52,25 @@ export const api = {
 
 
   async user_debtors() {
-    const res = await fetch(`${API_BASE_URL}/user/debtors`)
-  }
+    let endpoint = `${API_BASE_URL}/user/debtors`
+
+    if (debtor_id) {
+      const params = new URLSearchParams({
+        "debtor_id": debtor_id
+      })
+      endpoint = endpoint + `?${params}`
+    }
+
+    const res = await fetch(`${endpoint}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${access_token}`,
+        "content-type": "application/json"
+      }
+    });
+
+    return res
+  },
 
 
   // -- Transactions --
@@ -77,9 +89,9 @@ export const api = {
     const res = await fetch(`${endpoint}`, {
       method: 'GET',
       headers: {
-        // 'Authorization': `Bearer ${access_token}`,
+        'Authorization': `Bearer ${access_token}`,
         "content-type": "application/json"
-      },
+      }
     });
 
     return res
