@@ -56,6 +56,11 @@ export const api = {
   },
 
 
+  async user_debtors() {
+    const res = await fetch(`${API_BASE_URL}/user/debtors`)
+  }
+
+
   // -- Transactions --
   
   async user_txn_fltr(debtor_id) {

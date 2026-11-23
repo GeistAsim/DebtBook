@@ -1,3 +1,4 @@
+from typing import Annotated
 from fastapi import APIRouter
 from fastapi import Depends, HTTPException
 from fastapi.responses import JSONResponse
@@ -42,12 +43,11 @@ async def debtors():
 
 
 @get_router.get("/user/debtors")
-async def debtors_fltr(user_id: int | None = None):
-    user_id = user_id if user_id else 1
+async def debtors_fltr(user: Annotated[User, Depends(auth.get_current_user)]):
     crud = OperationDB()
 
     try:
-        debtor_obj = crud.user_debtors(user_id=user_id)
+        debtor_obj = crud.user_debtors(user_id=user.id)
         debtors_lst = debtor_entitys(debtor_obj)
 
         if len(debtors_lst) > 0:
@@ -98,16 +98,16 @@ async def txn():
 
 @get_router.get("/user/transactions")
 async def user_txn_fltr(
+    user: Annotated[User, Depends(auth.get_current_user)],
     debtor_id: int | None = None
 ):
     crud = OperationDB()
-    user_id = 1
 
     try:
         if debtor_id is not None:
-            txn_obj = crud.user_txn(user_id=user_id, debtor_id=debtor_id)
+            txn_obj = crud.user_txn(user_id=user.id, debtor_id=debtor_id)
         else:
-            txn_obj = crud.user_txn(user_id=user_id)
+            txn_obj = crud.user_txn(user_id=user.id)
 
         txn_lst = txn_entitys(txn_obj)
 
