@@ -5,7 +5,7 @@ export const api = {
 
   // --- Authentication ---
 
-  async login(username, password) {
+  async login({username, password}) {
     const formData = {
       "username": username,
       "password": password

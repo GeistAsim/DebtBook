@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { api } from '../api/api.js'
+import { worker } from '../utils/worker.js'
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Alert } from './Notification.jsx';
@@ -9,17 +10,6 @@ export const Login = ({ mode = 'login' }) => {
   const navigate = useNavigate();
   const [authError, setAuthError] = useState(null);
 
-
-  async function handLogin() {
-    const formData = {
-      name: "test",
-      mobile_no: "56974585415"
-    }
-    const result = await api.user_txn_fltr()
-      console.log(result)
-  }
-
-  // handLogin()
 
   const {
     register,
@@ -53,7 +43,7 @@ export const Login = ({ mode = 'login' }) => {
       } else {
 
         // Login user
-        const res = await api.login(data.username, data.password); 
+        const res = await api.login({username: data.username, password: data.password}); 
         const token = await res.json();
 
         if (!res.ok) {
@@ -65,6 +55,7 @@ export const Login = ({ mode = 'login' }) => {
           throw err
         }
 
+        const storage = worker.token_manager({action: "store", token: token.access_token})
         navigate('/');
         return token
 
@@ -74,6 +65,7 @@ export const Login = ({ mode = 'login' }) => {
       setAuthError(err);
     }
   };
+
 
   return (
     <main className="auth-layout">
