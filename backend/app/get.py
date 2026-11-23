@@ -43,15 +43,25 @@ async def debtors():
 
 
 @get_router.get("/user/debtors")
-async def debtors_fltr(user: Annotated[User, Depends(auth.get_current_user)]):
+async def debtors_fltr(
+    user: Annotated[User, Depends(auth.get_current_user)],
+    debtor_id: int | None = None
+):
     crud = OperationDB()
 
     try:
-        debtor_obj = crud.user_debtors(user_id=user.id)
+        if debtor_id is None:
+            debtor_obj = crud.user_debtors(user_id=user.id)
+        else:
+            debtor_obj = crud.user_debtors(user_id=user.id, debtor_id=debtor_id)
+
         debtors_lst = debtor_entitys(debtor_obj)
 
         if len(debtors_lst) > 0:
-            return JSONResponse(status_code=200, content=debtors_lst)
+            if len(debtors_lst) == 1:
+                return JSONResponse(status_code=200, content=debtors_lst[0])
+            else:
+                return JSONResponse(status_code=200, content=debtors_lst)
         
         raise HTTPException(
             status_code=400,

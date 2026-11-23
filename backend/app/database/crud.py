@@ -190,12 +190,20 @@ class OperationDB:
         return debtors
 
 
-    def user_debtors(self, user_id):
-        stmt = (
-            select(Debtor).where(
-                Debtor.user_id == user_id
+    def user_debtors(self, user_id: int, debtor_id: int | None = None):
+        if debtor_id is None:
+            stmt = (
+                select(Debtor).where(
+                    Debtor.user_id == user_id
+                )
             )
-        )
+        else:
+            stmt = (
+                select(Debtor).where(
+                    Debtor.id == debtor_id,
+                    Debtor.user_id == user_id
+                )
+            )
         try:
             debtors = self._conn.scalars(stmt).all()
         except SQLAlchemyError as err:
