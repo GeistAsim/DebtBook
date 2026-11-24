@@ -58,6 +58,9 @@ class User(Base):
 class Debtor(Base):
     """A Shop debtor who buys on credit"""
     __tablename__ = "debtors"
+    __table_args__ = (
+        CheckConstraint("net_balance >= 0", name="Balance should be positive"),
+    )
 
     id: Mapped[int] = mapped_column(BigInt, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(

@@ -6,6 +6,7 @@ from app.database.db import Base, engine
 from app.user import public_router, auth_router
 from app.post import post_router
 from app.get import get_router
+from app.dashboard import dashboard_router
 
 load_dotenv()
 
@@ -29,6 +30,7 @@ app = FastAPI(title="Debt Book")
 
 # include router
 app.include_router(public_router)
+app.include_router(dashboard_router)
 app.include_router(auth_router)
 app.include_router(post_router)
 app.include_router(get_router)

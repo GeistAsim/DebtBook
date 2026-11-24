@@ -1,6 +1,8 @@
+import calendar
+from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from app.database.db import Base, engine, SessionLocal
@@ -30,6 +32,21 @@ class OperationDB:
         if debtor is not None: return debtor
 
         return None
+
+
+    def _month_period(self) -> dict:
+        utc_time = datetime.now(timezone.utc)
+        ist_time = utc_time + timedelta(hours=5, minutes=30)
+
+        month_start = ist_time.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        _, days = calendar.monthrange(month_start.year, month_start.month)
+        month_end = ist_time.replace(day=days, hour=0, minute=0, second=0, microsecond=0)
+
+        return {
+            "start": month_start,
+            "end": month_end
+        }
 
 
 
@@ -83,7 +100,7 @@ class OperationDB:
         """Insert a ledger entry and update debtor balance automatically."""
         # check amount
         amount = Decimal(amount)
-        if amount < 0: raise ValueError("Amount must be positive!!!")
+        if amount <= 0: raise ValueError("Amount must be positive!!!")
 
         debtor = self._is_valid_debtor(debtor_id=debtor_id, user_id=user_id)
 
@@ -94,6 +111,8 @@ class OperationDB:
         if txn_type == TxnType.debt:
             debtor.net_balance += amount
         elif txn_type == TxnType.payment:
+            if debtor.net_balance < amount:
+                raise ValueError("Payment exceeds current debtor balance!!!")
             debtor.net_balance -= amount
         else:
             raise ValueError("Invalid! transaction type")
@@ -107,6 +126,7 @@ class OperationDB:
         ) 
         self._conn.add(txn) 
         self._conn.commit()
+        self._conn.refresh(txn)
         return txn
 
 
@@ -218,6 +238,46 @@ class OperationDB:
         return debtors
 
 
+    def outstanding_credits(self, user_id: int):
+        stmt = (
+            select(func.sum(Debtor.net_balance)).where(
+                Debtor.user_id == user_id
+            )
+        )
+        try:
+            credit = self._conn.scalars(stmt).one_or_none()
+        except SQLAlchemyError as err:
+            raise RuntimeError(f"DataBase error while fetching user credits!!!\n{err}")
+
+        if not credit:
+            raise HTTPException(
+                status_code=404,
+                detail="Credits not found!!!"
+            )
+
+        return credit
+
+
+    def count_debtor(self, user_id: int):
+        stmt = (
+            select(func.count(Debtor.id)).where(
+                Debtor.user_id == user_id
+            )
+        )
+        try:
+            debtor = self._conn.scalars(stmt).one_or_none()
+        except SQLAlchemyError as err:
+            raise RuntimeError(f"DataBase error while fetching debtor counts!!!\n{err}")
+
+        if not debtor:
+            raise HTTPException(
+                status_code=404,
+                detail="Debtor count not found!!!"
+            )
+
+        return debtor
+
+
     # Transaction Section
 
     def all_txn(self) -> list:
@@ -261,6 +321,40 @@ class OperationDB:
             raise HTTPException(
                 status_code=404,
                 detail="Transactions not found!!!"
+            )
+
+        return txn
+
+
+    def monthly_txn(self, user_id: int, txn_type: TxnType):
+        if isinstance(txn_type, str):
+            txn_type = txn_type.upper()
+            try:
+                txn_type = TxnType(txn_type)
+            except ValueError as err:
+                valid_types = [t.value for t in TxnType]
+                raise ValueError(f"Invalid txn_type {txn_type}. Must be one of {valid_types}")
+
+        period = self._month_period()
+
+        stmt = (
+            select(
+                func.sum(Transaction.amount)
+            ).where(
+                Transaction.user_id == user_id,
+                Transaction.txn_type == txn_type,
+                Transaction.txn_date.between(period["start"], period["end"])
+            )
+        )
+        try:
+            txn = self._conn.scalars(stmt).one_or_none()
+        except SQLAlchemyError as err:
+            raise RuntimeError(f"DataBase error while fetching month_credits!!!\n{err}")
+
+        if not txn:
+            raise HTTPException(
+                status_code=404,
+                detail="dashboard not found!!!"
             )
 
         return txn
