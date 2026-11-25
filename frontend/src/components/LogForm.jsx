@@ -51,17 +51,19 @@ export const LogForm = () => {
       </header>
 
       <div className="modal__body">
-        {modal.type === 'debtor' ? (
-          <DebtorInnerForm onCancel={handleCancel} onSuccess={addDebtor} onDone={closeModal} />
-        ) : (
-          <TxnInnerForm
-            debtors={debtors}
-            defaultDebtorId={modal.debtorId}
-            defaultTxnType={modal.txnType}
-            onCancel={handleCancel}
-            onSuccess={addTransaction}
-            onDone={closeModal}
-          />
+        {modal.isOpen && (
+          modal.type === 'debtor' ? (
+            <DebtorInnerForm onCancel={handleCancel} onSuccess={addDebtor} onDone={closeModal} />
+          ) : (
+            <TxnInnerForm
+              debtors={debtors}
+              defaultDebtorId={modal.debtorId}
+              defaultTxnType={modal.txnType}
+              onCancel={handleCancel}
+              onSuccess={addTransaction}
+              onDone={closeModal}
+            />
+          )
         )}
       </div>
     </dialog>
@@ -85,10 +87,12 @@ const DebtorInnerForm = ({ onCancel, onSuccess, onDone }) => {
 
   const watchedName = watch('name');
 
-  const onSubmit = (data) => {
-    onSuccess(data);
-    reset();
-    onDone();
+  const onSubmit = async (data) => {
+    const ok = await onSuccess(data);
+    if (ok !== false) {
+      reset();
+      onDone();
+    }
   };
 
   return (
@@ -110,7 +114,7 @@ const DebtorInnerForm = ({ onCancel, onSuccess, onDone }) => {
           type="text"
           maxLength={64}
           autoComplete="off"
-          placeholder="Ramesh Kumar"
+          placeholder="Enter debtor name"
           aria-invalid={errors.name ? 'true' : 'false'}
           {...register('name', {
             required: 'Debtor name is required',
@@ -131,7 +135,7 @@ const DebtorInnerForm = ({ onCancel, onSuccess, onDone }) => {
           inputMode="tel"
           maxLength={20}
           autoComplete="off"
-          placeholder="9876543210"
+          placeholder="Enter mobile number"
           aria-describedby="debtor-mobile-hint"
           {...register('mobile_no', {
             maxLength: { value: 20, message: 'Mobile cannot exceed 20 characters' },
@@ -176,14 +180,16 @@ const TxnInnerForm = ({
     },
   });
 
-  const onSubmit = (data) => {
-    onSuccess({
+  const onSubmit = async (data) => {
+    const ok = await onSuccess({
       debtor_id: Number(data.debtor_id),
       txn_type: data.txn_type,
       amount: parseFloat(data.amount),
     });
-    reset();
-    onDone();
+    if (ok !== false) {
+      reset();
+      onDone();
+    }
   };
 
   return (

@@ -4,8 +4,10 @@ import { worker } from '../utils/worker.js'
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Alert } from './Notification.jsx';
+import { useDebt } from '../Context/context.jsx';
 
 export const Login = ({ mode = 'login' }) => {
+  const { setToken, setUser } = useDebt();
   const isRegister = mode === 'register';
   const navigate = useNavigate();
   const [authError, setAuthError] = useState(null);
@@ -28,41 +30,47 @@ export const Login = ({ mode = 'login' }) => {
         const status = await res.json();
 
         if (!res.ok) {
-          const err = {
+          const detailText = Array.isArray(status.detail)
+            ? status.detail.map((d) => d.msg || String(d)).join(', ')
+            : status.detail || 'Registration failed.';
+          throw {
             title: `${res.status} ${res.statusText}`,
-            text: `${status.detail}`
-          }
-          setAuthError(err);
-          throw err
+            text: detailText,
+          };
         }
 
-        navigate('/login')
-        console.log(status)
-        return status
-
+        navigate('/login');
+        return status;
       } else {
-
         // Login user
-        const res = await api.login({username: data.username, password: data.password}); 
+        const res = await api.login({ username: data.username, password: data.password });
         const token = await res.json();
 
         if (!res.ok) {
-          const err = {
+          const detailText = Array.isArray(token.detail)
+            ? token.detail.map((d) => d.msg || String(d)).join(', ')
+            : token.detail || 'Incorrect username or password.';
+          throw {
             title: `${res.status} ${res.statusText}`,
-            text: `${token.detail}`
-          }
-          setAuthError(err);
-          throw err
+            text: detailText,
+          };
         }
 
-        const storage = worker.token_manager({action: "store", token: token.access_token})
+        worker.token_manager({ action: 'store', token: token.access_token });
+        setToken(token.access_token);
+        setUser({ username: data.username });
         navigate('/');
-        return token
-
+        return token;
       }
     } catch (err) {
-      console.error(`${err.title}: ${err.text}`)
-      setAuthError(err);
+      const formattedErr = err?.title
+        ? err
+        : {
+            title: 'Connection error',
+            text: err?.message || 'Could not reach the server.',
+          };
+      console.error(`${formattedErr.title}: ${formattedErr.text}`);
+      setAuthError(formattedErr);
     }
   };
 

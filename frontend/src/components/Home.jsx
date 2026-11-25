@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { api } from '../api/api.js'
 import { useDebt, formatCurrency, getInitials } from '../Context/context.jsx';
 import { EmptyState } from './Notification.jsx';
 
@@ -27,33 +26,35 @@ export const Home = ({ view = 'dashboard' }) => {
 // 1. DASHBOARD VIEW
 // ==========================================
 const DashboardView = () => {
-  const { debtors, transactions } = useDebt();
+  const { debtors, transactions, dashboardStats } = useDebt();
 
-  // Compute stat metrics
+  // Compute stat metrics from live API data
   const stats = useMemo(() => {
-    const totalOutstanding = debtors.reduce((sum, d) => sum + (Number(d.net_balance) || 0), 0);
+    const computedOutstanding = debtors.reduce((sum, d) => sum + (Number(d.net_balance) || 0), 0);
     const debtorsOwingCount = debtors.filter((d) => (Number(d.net_balance) || 0) > 0).length;
 
-    const creditThisMonth = transactions
-      .filter((t) => t.txn_type === 'DEBT')
-      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-    const creditCount = transactions.filter((t) => t.txn_type === 'DEBT').length;
+    const creditTxns = transactions.filter((t) => t.txn_type === 'DEBT');
+    const paymentTxns = transactions.filter((t) => t.txn_type === 'PAYMENT');
 
-    const paymentsThisMonth = transactions
-      .filter((t) => t.txn_type === 'PAYMENT')
-      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-    const paymentCount = transactions.filter((t) => t.txn_type === 'PAYMENT').length;
+    const computedCredit = creditTxns.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    const computedPayments = paymentTxns.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+
+    const lastUpdated =
+      transactions[0]?.txn_date?.date ||
+      debtors[0]?.updated_at?.date ||
+      null;
 
     return {
-      totalOutstanding,
+      totalOutstanding: dashboardStats?.outstanding ?? computedOutstanding,
       debtorsOwingCount,
-      totalDebtors: debtors.length,
-      creditThisMonth,
-      creditCount,
-      paymentsThisMonth,
-      paymentCount,
+      totalDebtors: dashboardStats?.debtor_count ?? debtors.length,
+      creditThisMonth: dashboardStats?.credit ?? computedCredit,
+      creditCount: creditTxns.length,
+      paymentsThisMonth: dashboardStats?.payment ?? computedPayments,
+      paymentCount: paymentTxns.length,
+      lastUpdated,
     };
-  }, [debtors, transactions]);
+  }, [debtors, transactions, dashboardStats]);
 
   return (
     <>
@@ -70,7 +71,8 @@ const DashboardView = () => {
           <h2 className="stat-card__label">Total outstanding</h2>
           <p className="figure stat-card__value">{formatCurrency(stats.totalOutstanding)}</p>
           <p className="stat-card__note">
-            Across {stats.debtorsOwingCount} debtors, updated today
+            Across {stats.debtorsOwingCount} debtors
+            {stats.lastUpdated ? `, updated ${stats.lastUpdated}` : ''}
           </p>
         </article>
 
@@ -159,7 +161,7 @@ const DebtorDetailView = ({ debtorId }) => {
                 {debtor.mobile_no}
               </p>
             )}
-            <p className="text-muted">Added {debtor.created_at?.date || 'Recently'}</p>
+            <p className="text-muted">Added {debtor.created_at?.date || '-'}</p>
           </div>
         </div>
 
@@ -246,8 +248,8 @@ const ProfileView = () => {
             {getInitials(user?.name || user?.username)}
           </span>
           <div className="user-profile__text stack">
-            <h2 id="user-profile-name">{user?.name || 'Shop Owner'}</h2>
-            <p className="text-muted">{user?.business_name || 'My Shop'}</p>
+            <h2 id="user-profile-name">{user?.name || user?.username || '-'}</h2>
+            <p className="text-muted">{user?.business_name || '-'}</p>
           </div>
           <button
             className="btn btn--quiet user-profile__logout"
@@ -280,7 +282,7 @@ const ProfileView = () => {
           </div>
           <div className="user-profile__item">
             <dt className="text-muted">Using DebtBook since</dt>
-            <dd>{user?.created_at?.date || '02-Oct-2026'}</dd>
+            <dd>{user?.created_at?.date || '-'}</dd>
           </div>
         </dl>
       </section>

@@ -58,7 +58,7 @@ export const Sidebar = () => {
           <span className="avatar avatar--sm" aria-hidden="true">
             {getInitials(user?.name || user?.username)}
           </span>
-          <span className="sidebar__username">{user?.username || 'user'}</span>
+          <span className="sidebar__username">{user?.username || '-'}</span>
         </Link>
         <button
           className="btn btn--quiet btn--icon"

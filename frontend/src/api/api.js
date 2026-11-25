@@ -1,30 +1,33 @@
-import { worker } from '../utils/worker.js'
+import { worker } from '../utils/worker.js';
 
+const API_BASE_URL = import.meta.env.VITE_API;
 
-const API_BASE_URL = import.meta.env.VITE_API
-
-
-
-// Access Token
-const access_token = worker.token_manager({action: "get"})
-
+const getAuthHeaders = () => {
+  const token = worker.token_manager({ action: 'get' });
+  const headers = {
+    'content-type': 'application/json',
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return headers;
+};
 
 export const api = {
-
   // --- Authentication ---
 
-  async login({username, password}) {
+  async login({ username, password }) {
     const formData = {
-      "username": username,
-      "password": password
-    }
+      username,
+      password,
+    };
 
-    let res = await fetch(`${API_BASE_URL}/user/login`, {
+    const res = await fetch(`${API_BASE_URL}/user/login`, {
       method: 'POST',
       headers: {
-        "content-type": "application/x-www-form-urlencoded"
+        'content-type': 'application/x-www-form-urlencoded',
       },
-      body: new URLSearchParams(formData)
+      body: new URLSearchParams(formData),
     });
 
     return res;
@@ -34,80 +37,94 @@ export const api = {
     const res = await fetch(`${API_BASE_URL}/new/user`, {
       method: 'POST',
       headers: {
-        "content-type": "application/json"
+        'content-type': 'application/json',
       },
-      body: JSON.stringify(userData)
+      body: JSON.stringify(userData),
     });
 
     return res;
   },
 
+  async current_user() {
+    const res = await fetch(`${API_BASE_URL}/current/user`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
 
-  // -- Debtor --
-  
+    return res;
+  },
+
+  // --- Dashboard ---
+
+  async dashboard() {
+    const res = await fetch(`${API_BASE_URL}/dashboard`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    return res;
+  },
+
+  // --- Debtor ---
+
   async debtor_register(debtorData) {
     const res = await fetch(`${API_BASE_URL}/new/debtor`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${access_token}`,
-        "content-type": "application/json"
-      },
-      body: JSON.stringify(debtorData)
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        name: debtorData.name,
+        mobile_no: debtorData.mobile_no ? debtorData.mobile_no : null,
+      }),
     });
 
-    return res
+    return res;
   },
-
 
   async user_debtors(debtor_id) {
-    let endpoint = `${API_BASE_URL}/user/debtors`
+    let endpoint = `${API_BASE_URL}/user/debtors`;
 
     if (debtor_id) {
       const params = new URLSearchParams({
-        "debtor_id": debtor_id
-      })
-      endpoint = endpoint + `?${params}`
+        debtor_id,
+      });
+      endpoint = `${endpoint}?${params}`;
     }
 
-    const res = await fetch(`${endpoint}`, {
+    const res = await fetch(endpoint, {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${access_token}`,
-        "content-type": "application/json"
-      }
+      headers: getAuthHeaders(),
     });
 
-    return res
+    return res;
   },
 
+  // --- Transactions ---
 
-  // -- Transactions --
-  
+  async new_txn(txnData) {
+    const res = await fetch(`${API_BASE_URL}/new/transaction`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(txnData),
+    });
+
+    return res;
+  },
+
   async user_txn_fltr(debtor_id) {
-    let endpoint = `${API_BASE_URL}/user/transactions`
+    let endpoint = `${API_BASE_URL}/user/transactions`;
 
     if (debtor_id) {
       const params = new URLSearchParams({
-        "debtor_id": debtor_id
-      })
-      endpoint = endpoint +  `?${params}`
+        debtor_id,
+      });
+      endpoint = `${endpoint}?${params}`;
     }
 
-    console.log(endpoint)
-    const res = await fetch(`${endpoint}`, {
+    const res = await fetch(endpoint, {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${access_token}`,
-        "content-type": "application/json"
-      }
+      headers: getAuthHeaders(),
     });
 
-    return res
-  } 
-
-
-// Exported function close
-}
-
-
-
+    return res;
+  },
+};

@@ -1,5 +1,4 @@
 import React from 'react';
-import { api } from './api/api.js'
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { DebtProvider, useDebt } from './Context/context.jsx';
 import Nav from './components/Nav.jsx';
