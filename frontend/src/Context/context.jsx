@@ -51,6 +51,7 @@ export const DebtProvider = ({ children }) => {
   const [transactions, setTransactions] = useState([]);
   const [dashboardStats, setDashboardStats] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [alert, setAlert] = useState(null);
   const [modal, setModal] = useState({
@@ -74,6 +75,7 @@ export const DebtProvider = ({ children }) => {
     setDebtors([]);
     setTransactions([]);
     setDashboardStats(null);
+    setLoaded(false);
     setToken(null);
   }, []);
 
@@ -136,6 +138,7 @@ export const DebtProvider = ({ children }) => {
       } else {
         setAlert(null);
       }
+      setLoaded(true);
     }
   }, []);
 
@@ -149,6 +152,33 @@ export const DebtProvider = ({ children }) => {
     }
   }, [token, loadAllData]);
 
+  // Fetch a single debtor by ID via GET /user/debtors?debtor_id=
+  const fetchDebtorById = useCallback(async (debtorId) => {
+    if (!token || !debtorId) return null;
+    const res = await api.user_debtors(debtorId);
+    if (res.status === 404) return null;
+    if (res.status === 400) {
+      const detail = await parseErrorDetail(res, '');
+      if (detail === 'Token Expired!!!') {
+        throw new Error(detail);
+      }
+      return null;
+    }
+    if (!res.ok) {
+      const detail = await parseErrorDetail(res, "Couldn't load debtor");
+      throw new Error(detail);
+    }
+    const data = await res.json();
+    return Array.isArray(data) ? data[0] || null : data;
+  }, [token]);
+
+  // Fetch transactions filtered by debtor ID via GET /user/transactions?debtor_id=
+  const fetchTransactionsByDebtor = useCallback(async (debtorId = null) => {
+    if (!token) return [];
+    const res = await api.user_txn_fltr(debtorId || undefined);
+    return parseListResponse(res, "Couldn't load transactions");
+  }, [token]);
+
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
@@ -161,18 +191,18 @@ export const DebtProvider = ({ children }) => {
   }, [token, loadAllData]);
 
   // Modal actions
-  const openModal = (type, options = {}) => {
+  const openModal = useCallback((type, options = {}) => {
     setModal({
       isOpen: true,
       type,
       debtorId: options.debtorId || null,
       txnType: options.txnType || 'DEBT',
     });
-  };
+  }, []);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setModal((prev) => ({ ...prev, isOpen: false }));
-  };
+  }, []);
 
   // Write actions via api.js
   const addDebtor = async (debtorData) => {
@@ -211,13 +241,13 @@ export const DebtProvider = ({ children }) => {
     }
   };
 
-  const showAlert = (title, text) => {
+  const showAlert = useCallback((title, text) => {
     setAlert({ title, text });
-  };
+  }, []);
 
-  const dismissAlert = () => {
+  const dismissAlert = useCallback(() => {
     setAlert(null);
-  };
+  }, []);
 
   return (
     <DebtContext.Provider
@@ -231,7 +261,10 @@ export const DebtProvider = ({ children }) => {
         transactions,
         dashboardStats,
         loading,
+        loaded,
         refreshData: fetchDashboardData,
+        fetchDebtorById,
+        fetchTransactionsByDebtor,
         searchTerm,
         setSearchTerm,
         modal,

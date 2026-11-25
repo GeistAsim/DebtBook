@@ -1,16 +1,25 @@
-import React, { useState, useMemo } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Link, useParams, useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { useDebt, formatCurrency, getInitials } from '../Context/context.jsx';
 import { EmptyState } from './Notification.jsx';
 
 export const Home = ({ view = 'dashboard' }) => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const debtorName = searchParams.get('name');
+  const stateDebtorId = location.state?.debtorId;
 
   switch (view) {
     case 'debtors':
       return <DebtorsView />;
     case 'debtor-detail':
-      return <DebtorDetailView debtorId={Number(id)} />;
+      return (
+        <DebtorDetailView
+          debtorId={stateDebtorId ? Number(stateDebtorId) : id ? Number(id) : null}
+          debtorName={debtorName}
+        />
+      );
     case 'transactions':
       return <TransactionsView />;
     case 'profile':
@@ -123,13 +132,92 @@ const DebtorsView = () => {
 };
 
 // ==========================================
-// 3. DEBTOR DETAIL VIEW (/debtor/:id)
+// 3. DEBTOR DETAIL VIEW (/debtor?name=...)
 // ==========================================
-const DebtorDetailView = ({ debtorId }) => {
-  const { debtors, openModal } = useDebt();
-  const debtor = debtors.find((d) => d.id === debtorId);
+const DebtorDetailView = ({ debtorId, debtorName }) => {
+  const {
+    debtors,
+    transactions,
+    loaded,
+    openModal,
+    fetchDebtorById,
+    fetchTransactionsByDebtor,
+    showAlert,
+  } = useDebt();
 
-  if (!debtor) {
+  const matchedByName = useMemo(() => {
+    if (!debtorName || !debtors.length) return null;
+    const target = debtorName.trim().toLowerCase();
+    return (
+      debtors.find((d) => d.name.trim() === debtorName.trim()) ||
+      debtors.find((d) => d.name.trim().toLowerCase() === target) ||
+      null
+    );
+  }, [debtorName, debtors]);
+
+  const resolvedDebtorId = debtorId || matchedByName?.id || null;
+  const cachedDebtor =
+    (resolvedDebtorId ? debtors.find((d) => d.id === resolvedDebtorId) : null) ||
+    matchedByName ||
+    null;
+
+  const [detailState, setDetailState] = useState({
+    id: null,
+    debtor: null,
+    txns: [],
+  });
+
+  useEffect(() => {
+    if (!resolvedDebtorId) return;
+    let cancelled = false;
+
+    async function loadDebtorDetail() {
+      try {
+        const [debtorRes, txnsRes] = await Promise.allSettled([
+          fetchDebtorById(resolvedDebtorId),
+          fetchTransactionsByDebtor(resolvedDebtorId),
+        ]);
+
+        if (cancelled) return;
+
+        const nextDebtor =
+          debtorRes.status === 'fulfilled' ? debtorRes.value : cachedDebtor;
+        if (debtorRes.status === 'rejected') {
+          showAlert("Couldn't load debtor", debtorRes.reason?.message || 'Server error.');
+        }
+
+        const nextTxns = txnsRes.status === 'fulfilled' ? txnsRes.value : [];
+        setDetailState({
+          id: resolvedDebtorId,
+          debtor: nextDebtor,
+          txns: nextTxns,
+        });
+      } catch {
+        if (!cancelled) {
+          setDetailState({ id: resolvedDebtorId, debtor: cachedDebtor, txns: [] });
+        }
+      }
+    }
+
+    loadDebtorDetail();
+    return () => {
+      cancelled = true;
+    };
+  }, [resolvedDebtorId, debtors, transactions, fetchDebtorById, fetchTransactionsByDebtor, showAlert, cachedDebtor]);
+
+  const loadingDebtor = resolvedDebtorId ? detailState.id !== resolvedDebtorId : !loaded;
+  const activeDebtor = (resolvedDebtorId && detailState.id === resolvedDebtorId ? detailState.debtor : null) || cachedDebtor;
+  const debtorTxns = resolvedDebtorId && detailState.id === resolvedDebtorId ? detailState.txns : [];
+
+  if (loadingDebtor && !activeDebtor) {
+    return (
+      <section className="card debtor-profile" aria-label="Loading debtor">
+        <p className="text-muted">Loading debtor details...</p>
+      </section>
+    );
+  }
+
+  if (!activeDebtor) {
     return (
       <EmptyState
         icon="icon-alert"
@@ -141,7 +229,7 @@ const DebtorDetailView = ({ debtorId }) => {
     );
   }
 
-  const netBalance = Number(debtor.net_balance) || 0;
+  const netBalance = Number(activeDebtor.net_balance) || 0;
 
   return (
     <>
@@ -149,19 +237,19 @@ const DebtorDetailView = ({ debtorId }) => {
       <section className="card debtor-profile" aria-label="Debtor summary">
         <div className="debtor-profile__identity">
           <span className="avatar avatar--lg" aria-hidden="true">
-            {getInitials(debtor.name)}
+            {getInitials(activeDebtor.name)}
           </span>
           <div className="debtor-profile__text stack">
-            <h1>{debtor.name}</h1>
-            {debtor.mobile_no && (
+            <h1>{activeDebtor.name}</h1>
+            {activeDebtor.mobile_no && (
               <p className="debtor-profile__phone text-muted">
                 <svg className="icon" aria-hidden="true">
                   <use href="/sprite.svg#icon-phone" />
                 </svg>
-                {debtor.mobile_no}
+                {activeDebtor.mobile_no}
               </p>
             )}
-            <p className="text-muted">Added {debtor.created_at?.date || '-'}</p>
+            <p className="text-muted">Added {activeDebtor.created_at?.date || '-'}</p>
           </div>
         </div>
 
@@ -179,7 +267,7 @@ const DebtorDetailView = ({ debtorId }) => {
               className="btn btn--primary"
               type="button"
               onClick={() =>
-                openModal('transaction', { debtorId: debtor.id, txnType: 'PAYMENT' })
+                openModal('transaction', { debtorId: activeDebtor.id, txnType: 'PAYMENT' })
               }
             >
               Record payment
@@ -188,7 +276,7 @@ const DebtorDetailView = ({ debtorId }) => {
               className="btn btn--quiet"
               type="button"
               onClick={() =>
-                openModal('transaction', { debtorId: debtor.id, txnType: 'DEBT' })
+                openModal('transaction', { debtorId: activeDebtor.id, txnType: 'DEBT' })
               }
             >
               Add credit
@@ -198,7 +286,12 @@ const DebtorDetailView = ({ debtorId }) => {
       </section>
 
       {/* Single Debtor Ledger */}
-      <TransactionsTableSection debtorId={debtor.id} isSingleDebtor={true} title="Ledger" />
+      <TransactionsTableSection
+        debtorId={activeDebtor.id}
+        isSingleDebtor={true}
+        externalTxns={debtorTxns}
+        title="Ledger"
+      />
     </>
   );
 };
@@ -367,7 +460,11 @@ const DebtorsTableSection = ({ limit, showViewAll = false }) => {
                 return (
                   <tr key={debtor.id}>
                     <td>
-                      <Link className="debtor-table__person" to={`/debtor/${debtor.id}`}>
+                      <Link
+                        className="debtor-table__person"
+                        to={`/debtor?name=${encodeURIComponent(debtor.name)}`}
+                        state={{ debtorId: debtor.id }}
+                      >
                         <span className="avatar avatar--sm" aria-hidden="true">
                           {getInitials(debtor.name)}
                         </span>
@@ -408,12 +505,35 @@ const TransactionsTableSection = ({
   limit,
   debtorId = null,
   isSingleDebtor = false,
+  externalTxns = null,
   title = 'Recent transactions',
 }) => {
-  const { transactions, debtors, openModal } = useDebt();
+  const { transactions, debtors, openModal, fetchTransactionsByDebtor, showAlert } = useDebt();
   const [selectedDebtorFilter, setSelectedDebtorFilter] = useState(
     debtorId ? String(debtorId) : ''
   );
+  const [filteredApiTxns, setFilteredApiTxns] = useState(null);
+
+  // Fetch filtered transactions from API when user selects a debtor in dropdown
+  useEffect(() => {
+    if (isSingleDebtor || externalTxns !== null || !selectedDebtorFilter) return;
+
+    let cancelled = false;
+    fetchTransactionsByDebtor(Number(selectedDebtorFilter))
+      .then((list) => {
+        if (!cancelled) setFilteredApiTxns(list);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setFilteredApiTxns([]);
+          showAlert("Couldn't load transactions", err.message || 'Server error.');
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDebtorFilter, transactions, isSingleDebtor, externalTxns, fetchTransactionsByDebtor, showAlert]);
 
   // Map debtor IDs to names for quick lookup
   const debtorMap = useMemo(() => {
@@ -422,28 +542,30 @@ const TransactionsTableSection = ({
     return map;
   }, [debtors]);
 
-  // Filter transactions
+  // Resolve displayed transactions (single-debtor API list, dropdown API list, or full context list)
   const displayedTxns = useMemo(() => {
-    let list = transactions;
-
-    if (debtorId) {
-      list = list.filter((t) => t.debtor_id === debtorId);
-    } else if (selectedDebtorFilter) {
-      const targetId = Number(selectedDebtorFilter);
-      list = list.filter((t) => t.debtor_id === targetId);
+    let list;
+    if (externalTxns !== null) {
+      list = externalTxns;
+    } else if (selectedDebtorFilter && filteredApiTxns !== null) {
+      list = filteredApiTxns;
+    } else if (debtorId) {
+      list = transactions.filter((t) => t.debtor_id === debtorId);
+    } else {
+      list = transactions;
     }
 
     return limit ? list.slice(0, limit) : list;
-  }, [transactions, debtorId, selectedDebtorFilter, limit]);
+  }, [transactions, debtorId, selectedDebtorFilter, filteredApiTxns, externalTxns, limit]);
 
-  if (transactions.length === 0) {
+  if (transactions.length === 0 && (!externalTxns || externalTxns.length === 0)) {
     return (
       <EmptyState
         icon="icon-inbox"
         title="No transactions yet"
         text="Add credit or record a payment to start this ledger."
         actionLabel="New transaction"
-        onAction={() => openModal('transaction')}
+        onAction={() => openModal('transaction', debtorId ? { debtorId } : {})}
       />
     );
   }
@@ -468,7 +590,11 @@ const TransactionsTableSection = ({
               id="txn-filter"
               name="debtor_id"
               value={selectedDebtorFilter}
-              onChange={(e) => setSelectedDebtorFilter(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedDebtorFilter(val);
+                if (!val) setFilteredApiTxns(null);
+              }}
             >
               <option value="">All debtors</option>
               {debtors.map((d) => (
@@ -525,7 +651,12 @@ const TransactionsTableSection = ({
                     </td>
                     {!isSingleDebtor && (
                       <td data-col="debtor">
-                        <Link to={`/debtor/${txn.debtor_id}`}>
+                        <Link
+                          to={`/debtor?name=${encodeURIComponent(
+                            debtorMap.get(txn.debtor_id) || String(txn.debtor_id)
+                          )}`}
+                          state={{ debtorId: txn.debtor_id }}
+                        >
                           {debtorMap.get(txn.debtor_id) || `Debtor #${txn.debtor_id}`}
                         </Link>
                       </td>

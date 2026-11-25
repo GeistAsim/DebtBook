@@ -44,6 +44,7 @@ export const App = () => {
           <Route element={<AuthenticatedLayout />}>
             <Route path="/" element={<Home view="dashboard" />} />
             <Route path="/debtors" element={<Home view="debtors" />} />
+            <Route path="/debtor" element={<Home view="debtor-detail" />} />
             <Route path="/debtor/:id" element={<Home view="debtor-detail" />} />
             <Route path="/transactions" element={<Home view="transactions" />} />
             <Route path="/profile" element={<Home view="profile" />} />
