@@ -7,10 +7,14 @@ load_dotenv()
 serverPort = int(os.getenv("SERVER_PORT"))
 
 
-if __name__ == "__main__":
+def main():
     uvicorn.run(
         app="app.app:app",
         host="0.0.0.0",
         port=serverPort,
         reload=True
     )
+
+
+if __name__ == "__main__":
+    main()
