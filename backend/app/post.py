@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from fastapi import Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from app.database.crud import OperationDB
-from app.schema.schema import NewDebtor, Txn
+from app.schema.schema import User, NewDebtor, Txn
 from app.auth import UserAuth
 
 

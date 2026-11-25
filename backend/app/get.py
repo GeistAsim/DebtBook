@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from fastapi import Depends, HTTPException
 from fastapi.responses import JSONResponse
 from app.database.crud import OperationDB
+from app.schema.schema import User
 from app.model.model import debtor_entitys, txn_entitys
 from app.auth import UserAuth
 
@@ -29,7 +30,7 @@ async def debtors():
         
         raise HTTPException(
             status_code=400,
-            details="Bad Request!!!"
+            detail="Bad Request!!!"
         )
 
     except HTTPException:

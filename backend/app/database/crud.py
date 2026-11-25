@@ -19,6 +19,10 @@ class OperationDB:
 
     """ Helper methods """
 
+    def conn_close(self):
+        return self._conn.close()
+
+
     def _is_valid_debtor(self, debtor_id: int, user_id: int):
         """Check debtor is valid for shop owner or not"""
         stmt = (
@@ -73,6 +77,8 @@ class OperationDB:
         )
         result = self._conn.add(user)
         result = self._conn.commit()
+        result = self._conn.refresh(user)
+        self._conn.close()
         return result 
 
 
@@ -86,6 +92,8 @@ class OperationDB:
         )
         self._conn.add(debtor)
         self._conn.commit()
+        self._conn.refresh(debtor)
+        self._conn.close()
         return debtor
 
 
@@ -127,6 +135,7 @@ class OperationDB:
         self._conn.add(txn) 
         self._conn.commit()
         self._conn.refresh(txn)
+        self._conn.close()
         return txn
 
 
@@ -144,6 +153,8 @@ class OperationDB:
             users = self._conn.scalars(stmt).all()
         except SQLAlchemyError as err:
             raise RuntimeError(f"DataBase error while fetching users!!!\n{err}")
+        finally:
+            self._conn.close()
 
         if not users:
             raise HTTPException(
@@ -174,9 +185,14 @@ class OperationDB:
             )
 
         try:
-            user = self._conn.scalars(stmt).one_or_none()
+            if username is not None:
+                user = self._conn.scalars(stmt).one_or_none()
+            else:
+                user = self._conn.scalars(stmt).all()
         except SQLAlchemyError as err:
             raise RuntimeError(f"DataBase error while checking user id: {username}!!!\n{err}")
+        finally:
+            self._conn.close()
 
         # Return None if user not found!!!
         if not user:
@@ -200,6 +216,8 @@ class OperationDB:
             debtors = self._conn.scalars(stmt).all()
         except SQLAlchemyError as err:
             raise RuntimeError(f"DataBase error while fetching debtors!!!\n{err}")
+        finally:
+            self._conn.close()
 
         if not debtors:
             raise HTTPException(
@@ -228,6 +246,8 @@ class OperationDB:
             debtors = self._conn.scalars(stmt).all()
         except SQLAlchemyError as err:
             raise RuntimeError(f"DataBase error while fetching user debtors!!!\n{err}")
+        finally:
+            self._conn.close()
 
         if not debtors:
             raise HTTPException(
@@ -248,6 +268,8 @@ class OperationDB:
             credit = self._conn.scalars(stmt).one_or_none()
         except SQLAlchemyError as err:
             raise RuntimeError(f"DataBase error while fetching user credits!!!\n{err}")
+        finally:
+            self._conn.close()
 
         if not credit:
             raise HTTPException(
@@ -268,6 +290,8 @@ class OperationDB:
             debtor = self._conn.scalars(stmt).one_or_none()
         except SQLAlchemyError as err:
             raise RuntimeError(f"DataBase error while fetching debtor counts!!!\n{err}")
+        finally:
+            self._conn.close()
 
         if not debtor:
             raise HTTPException(
@@ -288,6 +312,8 @@ class OperationDB:
             txn = self._conn.scalars(stmt).all()
         except SQLAlchemyError as err:
             raise RuntimeError(f"DataBase error while fethcing transactions!!!\n{err}")
+        finally:
+            self._conn.close()
 
         if not txn:
             raise HTTPException(
@@ -316,6 +342,8 @@ class OperationDB:
             txn = self._conn.scalars(stmt).all()
         except SQLAlchemyError as err:
             raise RuntimeError(f"Database error while fetching user transactions!!!\n{err}")
+        finally:
+            self._conn.close()
 
         if not txn:
             raise HTTPException(
@@ -350,6 +378,8 @@ class OperationDB:
             txn = self._conn.scalars(stmt).one_or_none()
         except SQLAlchemyError as err:
             raise RuntimeError(f"DataBase error while fetching month_credits!!!\n{err}")
+        finally:
+            self._conn.close()
 
         if not txn:
             raise HTTPException(

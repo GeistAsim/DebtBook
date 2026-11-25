@@ -18,6 +18,7 @@ class User(BaseModel):
     business_name: str
     mobile_no: str
     email: str
+    created_at: dict
 
 
 class UserInDB(User):

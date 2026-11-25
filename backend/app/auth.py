@@ -59,15 +59,15 @@ class UserAuth:
         try:
             if username is not None:
                 # find requested user
-                user = db.look_user(username)
+                user = db.look_user(username=username)
                 if user is not None:
                     user = user_entity(user)
                     return user
             
             elif username is None:
                 # list all users
-                users = db.look_user(username)
-                if user is not None and type(user) is list:
+                users = db.look_user()
+                if users is not None and type(users) is list:
                     users = user_entitys(users)
                     return users
 
@@ -76,6 +76,9 @@ class UserAuth:
                 status_code=500,
                 detail=f"Server Error: {err}"
             )
+        
+        finally:
+            db.conn_close()
 
 
     # is user registered or not?
