@@ -140,8 +140,16 @@ export const Login = ({ mode = 'login' }) => {
                 className="btn btn--primary btn--block"
                 type="submit"
                 disabled={isSubmitting}
+                aria-busy={isSubmitting ? 'true' : undefined}
               >
-                Log in
+                {isSubmitting ? (
+                  <>
+                    <span className="btn__spinner" aria-hidden="true" />
+                    Logging in...
+                  </>
+                ) : (
+                  'Log in'
+                )}
               </button>
             </form>
           ) : (
@@ -275,8 +283,16 @@ export const Login = ({ mode = 'login' }) => {
                 className="btn btn--primary btn--block"
                 type="submit"
                 disabled={isSubmitting}
+                aria-busy={isSubmitting ? 'true' : undefined}
               >
-                Create account
+                {isSubmitting ? (
+                  <>
+                    <span className="btn__spinner" aria-hidden="true" />
+                    Creating account...
+                  </>
+                ) : (
+                  'Create account'
+                )}
               </button>
             </form>
           )}

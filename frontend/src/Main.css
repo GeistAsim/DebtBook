@@ -415,3 +415,126 @@ fieldset {
   color: var(--color-text-muted);
   font-size: var(--text-xs);
 }
+
+/* ---- Skeleton loading & button spinner ---------------------------------- */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.skeleton {
+  display: block;
+  position: relative;
+  border-radius: var(--space-2);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-sunken) 25%,
+    color-mix(in srgb, var(--color-surface) 72%, var(--color-surface-sunken)) 50%,
+    var(--color-surface-sunken) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s var(--ease) infinite;
+}
+
+.skeleton.skeleton--hero {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-on-primary) 16%, transparent) 25%,
+    color-mix(in srgb, var(--color-on-primary) 30%, transparent) 50%,
+    color-mix(in srgb, var(--color-on-primary) 16%, transparent) 75%
+  );
+  background-size: 200% 100%;
+}
+
+.skeleton.skeleton--circle {
+  border-radius: var(--radius-pill);
+  color: transparent;
+  flex-shrink: 0;
+}
+
+.skeleton--pill {
+  height: 1.5rem;
+  width: 4.5rem;
+  border-radius: var(--radius-pill);
+}
+
+.skeleton--text {
+  height: 0.875rem;
+  width: 100%;
+}
+
+.skeleton--text-xs {
+  height: 0.75rem;
+  width: 100%;
+}
+
+.skeleton--title {
+  height: 1.5rem;
+  width: 10rem;
+}
+
+.skeleton--figure {
+  height: 2.125rem;
+  width: 7.5rem;
+}
+
+.skeleton--hero-figure {
+  height: clamp(2.5rem, 6vw, 3.25rem);
+  width: 11rem;
+  max-width: 100%;
+  border-radius: var(--space-3);
+}
+
+.skeleton--btn {
+  height: var(--tap);
+  width: 7.5rem;
+  border-radius: var(--radius-pill);
+}
+
+.skeleton--select {
+  height: var(--tap);
+  width: 11rem;
+  border-radius: var(--radius-md);
+}
+
+.skeleton-row-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.skeleton-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.btn__spinner {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  border: 2px solid color-mix(in srgb, currentColor 28%, transparent);
+  border-top-color: currentColor;
+  animation: btn-spin 0.7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+
+  .btn__spinner {
+    animation-duration: 1.5s;
+  }
+}

@@ -1,7 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useParams, useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { useDebt, formatCurrency, getInitials } from '../Context/context.jsx';
-import { EmptyState } from './Notification.jsx';
+import {
+  EmptyState,
+  StatCardsSkeleton,
+  TableSkeleton,
+  TableSkeletonRows,
+  DebtorProfileSkeleton,
+  UserProfileSkeleton,
+} from './Notification.jsx';
 
 export const Home = ({ view = 'dashboard' }) => {
   const { id } = useParams();
@@ -35,7 +42,7 @@ export const Home = ({ view = 'dashboard' }) => {
 // 1. DASHBOARD VIEW
 // ==========================================
 const DashboardView = () => {
-  const { debtors, transactions, dashboardStats } = useDebt();
+  const { debtors, transactions, dashboardStats, loaded } = useDebt();
 
   // Compute stat metrics from live API data
   const stats = useMemo(() => {
@@ -75,34 +82,38 @@ const DashboardView = () => {
       </div>
 
       {/* Stat Cards */}
-      <div className="stats">
-        <article className="stat-card stat-card--hero">
-          <h2 className="stat-card__label">Total outstanding</h2>
-          <p className="figure stat-card__value">{formatCurrency(stats.totalOutstanding)}</p>
-          <p className="stat-card__note">
-            Across {stats.debtorsOwingCount} debtors
-            {stats.lastUpdated ? `, updated ${stats.lastUpdated}` : ''}
-          </p>
-        </article>
+      {!loaded ? (
+        <StatCardsSkeleton />
+      ) : (
+        <div className="stats">
+          <article className="stat-card stat-card--hero">
+            <h2 className="stat-card__label">Total outstanding</h2>
+            <p className="figure stat-card__value">{formatCurrency(stats.totalOutstanding)}</p>
+            <p className="stat-card__note">
+              Across {stats.debtorsOwingCount} debtors
+              {stats.lastUpdated ? `, updated ${stats.lastUpdated}` : ''}
+            </p>
+          </article>
 
-        <article className="stat-card card">
-          <h2 className="stat-card__label">Debtors who owe you</h2>
-          <p className="figure stat-card__value">{stats.debtorsOwingCount}</p>
-          <p className="stat-card__note">of {stats.totalDebtors} people in your book</p>
-        </article>
+          <article className="stat-card card">
+            <h2 className="stat-card__label">Debtors who owe you</h2>
+            <p className="figure stat-card__value">{stats.debtorsOwingCount}</p>
+            <p className="stat-card__note">of {stats.totalDebtors} people in your book</p>
+          </article>
 
-        <article className="stat-card card">
-          <h2 className="stat-card__label">Credit given this month</h2>
-          <p className="figure stat-card__value">{formatCurrency(stats.creditThisMonth)}</p>
-          <p className="stat-card__note">{stats.creditCount} transactions</p>
-        </article>
+          <article className="stat-card card">
+            <h2 className="stat-card__label">Credit given this month</h2>
+            <p className="figure stat-card__value">{formatCurrency(stats.creditThisMonth)}</p>
+            <p className="stat-card__note">{stats.creditCount} transactions</p>
+          </article>
 
-        <article className="stat-card card">
-          <h2 className="stat-card__label">Payments received this month</h2>
-          <p className="figure stat-card__value">{formatCurrency(stats.paymentsThisMonth)}</p>
-          <p className="stat-card__note">{stats.paymentCount} transactions</p>
-        </article>
-      </div>
+          <article className="stat-card card">
+            <h2 className="stat-card__label">Payments received this month</h2>
+            <p className="figure stat-card__value">{formatCurrency(stats.paymentsThisMonth)}</p>
+            <p className="stat-card__note">{stats.paymentCount} transactions</p>
+          </article>
+        </div>
+      )}
 
       {/* Recent Debtors Table */}
       <DebtorsTableSection limit={5} showViewAll={true} />
@@ -211,9 +222,10 @@ const DebtorDetailView = ({ debtorId, debtorName }) => {
 
   if (loadingDebtor && !activeDebtor) {
     return (
-      <section className="card debtor-profile" aria-label="Loading debtor">
-        <p className="text-muted">Loading debtor details...</p>
-      </section>
+      <>
+        <DebtorProfileSkeleton />
+        <TableSkeleton variant="transactions" rows={4} title="Ledger" isSingleDebtor={true} />
+      </>
     );
   }
 
@@ -290,6 +302,7 @@ const DebtorDetailView = ({ debtorId, debtorName }) => {
         debtorId={activeDebtor.id}
         isSingleDebtor={true}
         externalTxns={debtorTxns}
+        isLoading={detailState.id !== resolvedDebtorId}
         title="Ledger"
       />
     </>
@@ -318,7 +331,7 @@ const TransactionsView = () => {
 // 5. PROFILE VIEW (/profile)
 // ==========================================
 const ProfileView = () => {
-  const { user, logout } = useDebt();
+  const { user, loaded, logout } = useDebt();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -335,50 +348,54 @@ const ProfileView = () => {
         </div>
       </div>
 
-      <section className="card user-profile" aria-labelledby="user-profile-name">
-        <div className="user-profile__identity">
-          <span className="avatar avatar--lg" aria-hidden="true">
-            {getInitials(user?.name || user?.username)}
-          </span>
-          <div className="user-profile__text stack">
-            <h2 id="user-profile-name">{user?.name || user?.username || '-'}</h2>
-            <p className="text-muted">{user?.business_name || '-'}</p>
+      {!loaded && !user ? (
+        <UserProfileSkeleton />
+      ) : (
+        <section className="card user-profile" aria-labelledby="user-profile-name">
+          <div className="user-profile__identity">
+            <span className="avatar avatar--lg" aria-hidden="true">
+              {getInitials(user?.name || user?.username)}
+            </span>
+            <div className="user-profile__text stack">
+              <h2 id="user-profile-name">{user?.name || user?.username || '-'}</h2>
+              <p className="text-muted">{user?.business_name || '-'}</p>
+            </div>
+            <button
+              className="btn btn--quiet user-profile__logout"
+              type="button"
+              onClick={handleLogout}
+            >
+              <svg className="icon" aria-hidden="true">
+                <use href="/sprite.svg#icon-logout" />
+              </svg>
+              Log out
+            </button>
           </div>
-          <button
-            className="btn btn--quiet user-profile__logout"
-            type="button"
-            onClick={handleLogout}
-          >
-            <svg className="icon" aria-hidden="true">
-              <use href="/sprite.svg#icon-logout" />
-            </svg>
-            Log out
-          </button>
-        </div>
 
-        <dl className="user-profile__details">
-          <div className="user-profile__item">
-            <dt className="text-muted">Username</dt>
-            <dd>{user?.username || '-'}</dd>
-          </div>
-          <div className="user-profile__item">
-            <dt className="text-muted">Shop name</dt>
-            <dd>{user?.business_name || '-'}</dd>
-          </div>
-          <div className="user-profile__item">
-            <dt className="text-muted">Mobile number</dt>
-            <dd>{user?.mobile_no || '-'}</dd>
-          </div>
-          <div className="user-profile__item">
-            <dt className="text-muted">Email</dt>
-            <dd>{user?.email || '-'}</dd>
-          </div>
-          <div className="user-profile__item">
-            <dt className="text-muted">Using DebtBook since</dt>
-            <dd>{user?.created_at?.date || '-'}</dd>
-          </div>
-        </dl>
-      </section>
+          <dl className="user-profile__details">
+            <div className="user-profile__item">
+              <dt className="text-muted">Username</dt>
+              <dd>{user?.username || '-'}</dd>
+            </div>
+            <div className="user-profile__item">
+              <dt className="text-muted">Shop name</dt>
+              <dd>{user?.business_name || '-'}</dd>
+            </div>
+            <div className="user-profile__item">
+              <dt className="text-muted">Mobile number</dt>
+              <dd>{user?.mobile_no || '-'}</dd>
+            </div>
+            <div className="user-profile__item">
+              <dt className="text-muted">Email</dt>
+              <dd>{user?.email || '-'}</dd>
+            </div>
+            <div className="user-profile__item">
+              <dt className="text-muted">Using DebtBook since</dt>
+              <dd>{user?.created_at?.date || '-'}</dd>
+            </div>
+          </dl>
+        </section>
+      )}
     </>
   );
 };
@@ -387,7 +404,7 @@ const ProfileView = () => {
 // REUSABLE SUBCOMPONENTS: DEBTORS TABLE
 // ==========================================
 const DebtorsTableSection = ({ limit, showViewAll = false }) => {
-  const { debtors, searchTerm, openModal } = useDebt();
+  const { debtors, searchTerm, openModal, loaded } = useDebt();
 
   // Search filter
   const filtered = useMemo(() => {
@@ -402,6 +419,17 @@ const DebtorsTableSection = ({ limit, showViewAll = false }) => {
     }
     return limit ? list.slice(0, limit) : list;
   }, [debtors, searchTerm, limit]);
+
+  if (!loaded) {
+    return (
+      <TableSkeleton
+        variant="debtors"
+        rows={limit || 5}
+        title="Debtors"
+        showAction={showViewAll}
+      />
+    );
+  }
 
   if (debtors.length === 0) {
     return (
@@ -506,13 +534,15 @@ const TransactionsTableSection = ({
   debtorId = null,
   isSingleDebtor = false,
   externalTxns = null,
+  isLoading = false,
   title = 'Recent transactions',
 }) => {
-  const { transactions, debtors, openModal, fetchTransactionsByDebtor, showAlert } = useDebt();
+  const { transactions, debtors, openModal, fetchTransactionsByDebtor, showAlert, loaded } = useDebt();
   const [selectedDebtorFilter, setSelectedDebtorFilter] = useState(
     debtorId ? String(debtorId) : ''
   );
-  const [filteredApiTxns, setFilteredApiTxns] = useState(null);
+  const [filteredState, setFilteredState] = useState({ id: '', list: null });
+  const isFilteringTxns = Boolean(selectedDebtorFilter) && filteredState.id !== selectedDebtorFilter;
 
   // Fetch filtered transactions from API when user selects a debtor in dropdown
   useEffect(() => {
@@ -521,11 +551,11 @@ const TransactionsTableSection = ({
     let cancelled = false;
     fetchTransactionsByDebtor(Number(selectedDebtorFilter))
       .then((list) => {
-        if (!cancelled) setFilteredApiTxns(list);
+        if (!cancelled) setFilteredState({ id: selectedDebtorFilter, list });
       })
       .catch((err) => {
         if (!cancelled) {
-          setFilteredApiTxns([]);
+          setFilteredState({ id: selectedDebtorFilter, list: [] });
           showAlert("Couldn't load transactions", err.message || 'Server error.');
         }
       });
@@ -547,8 +577,12 @@ const TransactionsTableSection = ({
     let list;
     if (externalTxns !== null) {
       list = externalTxns;
-    } else if (selectedDebtorFilter && filteredApiTxns !== null) {
-      list = filteredApiTxns;
+    } else if (
+      selectedDebtorFilter &&
+      filteredState.id === selectedDebtorFilter &&
+      filteredState.list !== null
+    ) {
+      list = filteredState.list;
     } else if (debtorId) {
       list = transactions.filter((t) => t.debtor_id === debtorId);
     } else {
@@ -556,7 +590,19 @@ const TransactionsTableSection = ({
     }
 
     return limit ? list.slice(0, limit) : list;
-  }, [transactions, debtorId, selectedDebtorFilter, filteredApiTxns, externalTxns, limit]);
+  }, [transactions, debtorId, selectedDebtorFilter, filteredState, externalTxns, limit]);
+
+  if (!loaded || (isSingleDebtor && isLoading)) {
+    return (
+      <TableSkeleton
+        variant="transactions"
+        rows={limit || 5}
+        title={title}
+        showFilter={!isSingleDebtor}
+        isSingleDebtor={isSingleDebtor}
+      />
+    );
+  }
 
   if (transactions.length === 0 && (!externalTxns || externalTxns.length === 0)) {
     return (
@@ -593,7 +639,7 @@ const TransactionsTableSection = ({
               onChange={(e) => {
                 const val = e.target.value;
                 setSelectedDebtorFilter(val);
-                if (!val) setFilteredApiTxns(null);
+                if (!val) setFilteredState({ id: '', list: null });
               }}
             >
               <option value="">All debtors</option>
@@ -630,7 +676,13 @@ const TransactionsTableSection = ({
             </tr>
           </thead>
           <tbody>
-            {displayedTxns.length === 0 ? (
+            {isFilteringTxns ? (
+              <TableSkeletonRows
+                variant="transactions"
+                rows={limit || 4}
+                isSingleDebtor={isSingleDebtor}
+              />
+            ) : displayedTxns.length === 0 ? (
               <tr>
                 <td
                   colSpan={isSingleDebtor ? 4 : 5}

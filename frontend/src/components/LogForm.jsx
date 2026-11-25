@@ -150,8 +150,20 @@ const DebtorInnerForm = ({ onCancel, onSuccess, onDone }) => {
         <button className="btn btn--quiet" type="button" onClick={onCancel}>
           Cancel
         </button>
-        <button className="btn btn--primary" type="submit" disabled={isSubmitting}>
-          Save debtor
+        <button
+          className="btn btn--primary"
+          type="submit"
+          disabled={isSubmitting}
+          aria-busy={isSubmitting ? 'true' : undefined}
+        >
+          {isSubmitting ? (
+            <>
+              <span className="btn__spinner" aria-hidden="true" />
+              Saving debtor...
+            </>
+          ) : (
+            'Save debtor'
+          )}
         </button>
       </div>
     </form>
@@ -287,8 +299,20 @@ const TxnInnerForm = ({
         <button className="btn btn--quiet" type="button" onClick={onCancel}>
           Cancel
         </button>
-        <button className="btn btn--primary" type="submit" disabled={isSubmitting}>
-          Save transaction
+        <button
+          className="btn btn--primary"
+          type="submit"
+          disabled={isSubmitting}
+          aria-busy={isSubmitting ? 'true' : undefined}
+        >
+          {isSubmitting ? (
+            <>
+              <span className="btn__spinner" aria-hidden="true" />
+              Saving transaction...
+            </>
+          ) : (
+            'Save transaction'
+          )}
         </button>
       </div>
     </form>

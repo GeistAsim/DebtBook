@@ -3,8 +3,9 @@ import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useDebt, getInitials } from '../Context/context.jsx';
 
 export const Sidebar = () => {
-  const { user, logout } = useDebt();
+  const { user, loaded, logout } = useDebt();
   const navigate = useNavigate();
+  const showUserSkeleton = !loaded && !user;
 
   const handleLogout = () => {
     logout();
@@ -54,11 +55,29 @@ export const Sidebar = () => {
       </nav>
 
       <div className="sidebar__user">
-        <Link className="sidebar__who" to="/profile" aria-label="Your profile">
-          <span className="avatar avatar--sm" aria-hidden="true">
-            {getInitials(user?.name || user?.username)}
-          </span>
-          <span className="sidebar__username">{user?.username || '-'}</span>
+        <Link
+          className="sidebar__who"
+          to="/profile"
+          aria-label="Your profile"
+          aria-busy={showUserSkeleton ? 'true' : undefined}
+        >
+          {showUserSkeleton ? (
+            <>
+              <span className="avatar avatar--sm skeleton skeleton--circle" aria-hidden="true" />
+              <span
+                className="sidebar__username skeleton skeleton--text"
+                style={{ width: '5.5rem' }}
+                aria-hidden="true"
+              />
+            </>
+          ) : (
+            <>
+              <span className="avatar avatar--sm" aria-hidden="true">
+                {getInitials(user?.name || user?.username)}
+              </span>
+              <span className="sidebar__username">{user?.username || '-'}</span>
+            </>
+          )}
         </Link>
         <button
           className="btn btn--quiet btn--icon"
