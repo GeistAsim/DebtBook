@@ -276,10 +276,9 @@ fieldset {
 
 .btn--quiet {
   background: transparent;
-  border-color: var(--color-border-strong);
 }
 
-.btn--quiet:hover { background: var(--color-surface-sunken); }
+.btn--quiet:hover { background: transparent; }
 
 .btn--icon {
   width: var(--tap);
@@ -288,6 +287,11 @@ fieldset {
 
 .btn--block {
   width: 100%;
+}
+
+
+.danger {
+  color: var(--color-danger);
 }
 
 /* ---- Forms -------------------------------------------------------------- */
@@ -340,7 +344,6 @@ fieldset {
 .input:focus-visible,
 .input-group:focus-within {
   outline: none;
-  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus) 28%, transparent);
 }
 

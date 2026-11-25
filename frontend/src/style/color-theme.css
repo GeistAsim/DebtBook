@@ -52,6 +52,6 @@
   --color-hero-layer-2: var(--palette-steel);
 
   /* ---- Errors (the only colour outside the palette; used by alert + field errors) */
-  --color-danger: #a23b3b;
+  --color-danger: #ce1111;
   --color-danger-soft: color-mix(in srgb, var(--color-danger) 8%, white);
 }

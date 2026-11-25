@@ -85,7 +85,7 @@ export const Sidebar = () => {
           aria-label="Log out"
           onClick={handleLogout}
         >
-          <svg className="icon" aria-hidden="true">
+          <svg className="icon danger" aria-hidden="true">
             <use href="/sprite.svg#icon-logout" />
           </svg>
         </button>
