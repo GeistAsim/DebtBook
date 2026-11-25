@@ -29,9 +29,6 @@ class UserAuth:
         self._ALGORITHM = ALGORITHM
         self._ACCESS_TOKEN_EXPIRE_MINUTES = ACCESS_TOKEN_EXPIRE_MINUTES
 
-        # Databse Connection
-        self._db = OperationDB()
-
         # hash password instance
         self._password_hash = PasswordHash.recommended()
 
@@ -41,10 +38,6 @@ class UserAuth:
             detail="Not Authorized",
             headers={"WWW-Authenticated": "bearer"}
             )
-
-        # IST time
-        self._ist_now = datetime.now(ZoneInfo("Asia/Kolkata"))
-
 
     """ Password Section """
 
@@ -62,17 +55,18 @@ class UserAuth:
 
     # User Manager
     def _user_manager(self, username: str | None = None):
+        db = OperationDB()
         try:
             if username is not None:
                 # find requested user
-                user = self._db.look_user(username)
+                user = db.look_user(username)
                 if user is not None:
                     user = user_entity(user)
                     return user
             
             elif username is None:
                 # list all users
-                users = self._db.look_user(username)
+                users = db.look_user(username)
                 if user is not None and type(user) is list:
                     users = user_entitys(users)
                     return users
@@ -129,10 +123,10 @@ class UserAuth:
         to_encode = data.copy()
 
         if expires_delta_min:
-            expire = self._ist_now + timedelta(minutes=expires_delta_min)
+            expire = datetime.now(timezone.utc) + timedelta(minutes=expires_delta_min)
 
         else:
-            expire = self._ist_now + timedelta(minutes=2)
+            expire = datetime.now(timezone.utc) + timedelta(minutes=2)
 
         to_encode.update({"exp": expire})
         encode_jwt = jwt.encode(to_encode, self.__SECRET_KEY, self._ALGORITHM)

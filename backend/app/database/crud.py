@@ -41,7 +41,7 @@ class OperationDB:
         month_start = ist_time.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         _, days = calendar.monthrange(month_start.year, month_start.month)
-        month_end = ist_time.replace(day=days, hour=0, minute=0, second=0, microsecond=0)
+        month_end = ist_time.replace(day=days, hour=23, minute=59, second=59, microsecond=999999)
 
         return {
             "start": month_start,
