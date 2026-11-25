@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
+import { api } from '../api/api.js'
 import { useDebt, formatCurrency, getInitials } from '../Context/context.jsx';
 import { EmptyState } from './Notification.jsx';
 
@@ -19,6 +20,7 @@ export const Home = ({ view = 'dashboard' }) => {
     default:
       return <DashboardView />;
   }
+  
 };
 
 // ==========================================

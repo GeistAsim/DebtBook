@@ -1,7 +1,6 @@
 export const worker = {
 
   token_manager({action, token}) {
-    console.log(action, token)
 
     switch (action) {
       case "store":

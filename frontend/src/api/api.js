@@ -1,4 +1,12 @@
+import { worker } from '../utils/worker.js'
+
+
 const API_BASE_URL = import.meta.env.VITE_API
+
+
+
+// Access Token
+const access_token = worker.token_manager({action: "get"})
 
 
 export const api = {
@@ -51,7 +59,7 @@ export const api = {
   },
 
 
-  async user_debtors() {
+  async user_debtors(debtor_id) {
     let endpoint = `${API_BASE_URL}/user/debtors`
 
     if (debtor_id) {
