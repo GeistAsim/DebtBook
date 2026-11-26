@@ -80,12 +80,12 @@ export const Sidebar = () => {
           )}
         </Link>
         <button
-          className="btn btn--quiet btn--icon"
+          className="btn danger btn--quiet btn--icon"
           type="button"
           aria-label="Log out"
           onClick={handleLogout}
         >
-          <svg className="icon danger" aria-hidden="true">
+          <svg className="icon" aria-hidden="true">
             <use href="/sprite.svg#icon-logout" />
           </svg>
         </button>

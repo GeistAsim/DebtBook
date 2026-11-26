@@ -294,6 +294,10 @@ fieldset {
   color: var(--color-danger);
 }
 
+.danger:hover {
+  background: var(--color-danger-soft)
+}
+
 /* ---- Forms -------------------------------------------------------------- */
 .form {
   display: flex;

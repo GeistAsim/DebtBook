@@ -361,7 +361,7 @@ const ProfileView = () => {
               <p className="text-muted">{user?.business_name || '-'}</p>
             </div>
             <button
-              className="btn btn--quiet user-profile__logout"
+              className="btn danger btn--quiet user-profile__logout"
               type="button"
               onClick={handleLogout}
             >
