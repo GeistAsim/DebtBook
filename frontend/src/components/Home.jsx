@@ -539,10 +539,14 @@ const TransactionsTableSection = ({
 }) => {
   const { transactions, debtors, openModal, fetchTransactionsByDebtor, showAlert, loaded } = useDebt();
   const [selectedDebtorFilter, setSelectedDebtorFilter] = useState(
-    debtorId ? String(debtorId) : ''
+    !isSingleDebtor && debtorId ? String(debtorId) : ''
   );
   const [filteredState, setFilteredState] = useState({ id: '', list: null });
-  const isFilteringTxns = Boolean(selectedDebtorFilter) && filteredState.id !== selectedDebtorFilter;
+  const isFilteringTxns =
+    !isSingleDebtor &&
+    externalTxns === null &&
+    Boolean(selectedDebtorFilter) &&
+    filteredState.id !== selectedDebtorFilter;
 
   // Fetch filtered transactions from API when user selects a debtor in dropdown
   useEffect(() => {
