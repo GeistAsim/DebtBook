@@ -137,18 +137,12 @@ class UserAuth:
 
 
     # Decode token
-    def _decode_token(self, token: Annotated[str, Depends(oauth_schema)]): 
-        try:
-            payload = jwt.decode(token, self.__SECRET_KEY, algorithms=[self._ALGORITHM], options={"verify_exp": True})
+    def _decode_token(self, token: Annotated[str, Depends(oauth_schema)], verify_exp: bool = True):
+        if token:
+            payload = jwt.decode(token, self.__SECRET_KEY, algorithms=[self._ALGORITHM], options={"verify_exp": verify_exp})
             return payload
-
-        except InvalidTokenError as err:
-            if isinstance(err, ExpiredSignatureError) or str(err) == "Signature has expired":
-                raise HTTPException(
-                    status_code=400,
-                    detail="Token Expired!!!"
-                )
-            raise self.credentials_exception
+        else:
+            return None
 
 
     """ Token scanning """
@@ -176,4 +170,21 @@ class UserAuth:
                     detail="Token Expired!!!"
                 )
             
+            raise self.credentials_exception
+
+
+    def verify_token(self, token: Annotated[str, Depends(oauth_schema)]):
+        try:
+            payload = self._decode_token(token=token, verify_exp=False)
+            if payload["exp"] and payload["exp"] <= int(datetime.now(timezone.utc).timestamp()):
+                if self.is_registered_user(username=payload["username"]):
+                    new_token = self._create_access_token(
+                        data=payload,
+                        expires_delta_min=self._ACCESS_TOKEN_EXPIRE_MINUTES
+                    )
+                    return Token(
+                        access_token=new_token,
+                        token_type='bearer'
+                    )
+        except InvalidTokenError as err:
             raise self.credentials_exception

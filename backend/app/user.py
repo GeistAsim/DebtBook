@@ -18,6 +18,9 @@ auth = UserAuth()
 # User Authetication & Authorization Router
 auth_router = APIRouter(dependencies=[Depends(auth.get_current_user)])
 
+# token state
+token_state = APIRouter()
+
 # Public Routes
 public_router = APIRouter()
 
@@ -25,11 +28,6 @@ public_router = APIRouter()
 """ Token Section """
 
 # User Credentails
-@auth_router.get("/current/user")
-def current_user(user: Annotated[User, Depends(auth.get_current_user)]):
-    return JSONResponse(status_code=200, content=user.model_dump())
-
-
 @public_router.post("/user/login")
 async def user_login(login_credentials: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     user_token = auth.authenticate_user(username=login_credentials.username, password=login_credentials.password)
@@ -45,7 +43,17 @@ async def user_login(login_credentials: Annotated[OAuth2PasswordRequestForm, Dep
     return user_token
 
 
+@token_state.get("/token/validation")
+async def token_validation(token: Annotated[str, Depends(auth.verify_token)]) -> Token:
+    return token
+
+
+
 """ User Section """
+
+@auth_router.get("/current/user")
+def current_user(user: Annotated[User, Depends(auth.get_current_user)]):
+    return JSONResponse(status_code=200, content=user.model_dump())
 
 # new user registration
 @public_router.post("/new/user", response_model=NewUser)
