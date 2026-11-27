@@ -45,7 +45,17 @@ async def user_login(login_credentials: Annotated[OAuth2PasswordRequestForm, Dep
 
 @token_state.get("/token/validation")
 async def token_validation(token: Annotated[str, Depends(auth.verify_token)]) -> Token:
-    return token
+    if type(token) is not str:
+        token = token.model_dump()
+        return JSONResponse(
+            status_code=201,
+            content=token
+        )
+
+    return JSONResponse(
+        status_code=200,
+        content=token
+    )
 
 
 

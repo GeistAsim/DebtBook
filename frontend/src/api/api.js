@@ -33,12 +33,20 @@ export const api = {
     return res;
   },
 
+
+  async verify_token () {
+    const res = await fetch(`${API_BASE_URL}/token/validation`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+
+    return res
+  },
+
   async register(userData) {
     const res = await fetch(`${API_BASE_URL}/new/user`, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(userData),
     });
 

@@ -176,15 +176,19 @@ class UserAuth:
     def verify_token(self, token: Annotated[str, Depends(oauth_schema)]):
         try:
             payload = self._decode_token(token=token, verify_exp=False)
-            if payload["exp"] and payload["exp"] <= int(datetime.now(timezone.utc).timestamp()):
-                if self.is_registered_user(username=payload["username"]):
-                    new_token = self._create_access_token(
-                        data=payload,
-                        expires_delta_min=self._ACCESS_TOKEN_EXPIRE_MINUTES
-                    )
-                    return Token(
-                        access_token=new_token,
-                        token_type='bearer'
-                    )
+
+            if self.is_registered_user(username=payload["username"]) and (payload["exp"] and payload["exp"] <= int(datetime.now(timezone.utc).timestamp())):
+                new_token = self._create_access_token(
+                    data=payload,
+                    expires_delta_min=self._ACCESS_TOKEN_EXPIRE_MINUTES
+                )
+                return Token(
+                    access_token=new_token,
+                    token_type='bearer'
+                )
+
+            else:
+                return "Token Valid"
+
         except InvalidTokenError as err:
             raise self.credentials_exception

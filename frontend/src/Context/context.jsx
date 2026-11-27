@@ -81,71 +81,83 @@ export const DebtProvider = ({ children }) => {
 
   const loadAllData = useCallback(async (isCancelled = () => false) => {
     if (worker.token_manager({action: "get"})) {
-      const [userResult, debtorsResult, txnsResult, dashResult] = await Promise.allSettled([
-        api.current_user(),
-        api.user_debtors(),
-        api.user_txn_fltr(),
-        api.dashboard(),
-      ]);
 
-      const errors = [];
+      const res = await api.verify_token();
+      
+      if (res.status === 200) {
 
-      if (userResult.status === 'fulfilled') {
-        try {
-          const userData = await parseUserResponse(userResult.value);
-          if (!isCancelled()) setUser(userData);
-        } catch (err) {
-          errors.push(err.message);
-        }
-      } else {
-        errors.push(userResult.reason?.message || "Couldn't load profile");
-      }
+        const [userResult, debtorsResult, txnsResult, dashResult] = await Promise.allSettled([
+          api.current_user(),
+          api.user_debtors(),
+          api.user_txn_fltr(),
+          api.dashboard(),
+        ]);
 
-      if (debtorsResult.status === 'fulfilled') {
-        try {
-          const debtorsData = await parseListResponse(debtorsResult.value, "Couldn't load debtors");
-          if (!isCancelled()) setDebtors(debtorsData);
-        } catch (err) {
-          errors.push(err.message);
-        }
-      } else {
-        errors.push(debtorsResult.reason?.message || "Couldn't load debtors");
-      }
+        const errors = [];
 
-      if (txnsResult.status === 'fulfilled') {
-        try {
-          const txnsData = await parseListResponse(txnsResult.value, "Couldn't load transactions");
-          if (!isCancelled()) setTransactions(txnsData);
-        } catch (err) {
-          errors.push(err.message);
-        }
-      } else {
-        errors.push(txnsResult.reason?.message || "Couldn't load transactions");
-      }
-
-      if (dashResult.status === 'fulfilled' && dashResult.value.ok) {
-        const dashData = await dashResult.value.json().catch(() => null);
-        if (!isCancelled()) setDashboardStats(dashData);
-      } else if (!isCancelled()) {
-        setDashboardStats(null);
-      }
-
-      if (!isCancelled()) {
-        if (errors.length > 0) {
-          setAlert({
-            title: "Couldn't load some data",
-            text: errors[0],
-          });
+        if (userResult.status === 'fulfilled') {
+          try {
+            const userData = await parseUserResponse(userResult.value);
+            if (!isCancelled()) setUser(userData);
+          } catch (err) {
+            errors.push(err.message);
+          }
         } else {
-          setAlert(null);
+          errors.push(userResult.reason?.message || "Couldn't load profile");
         }
-        setLoaded(true);
+
+        if (debtorsResult.status === 'fulfilled') {
+          try {
+            const debtorsData = await parseListResponse(debtorsResult.value, "Couldn't load debtors");
+            if (!isCancelled()) setDebtors(debtorsData);
+          } catch (err) {
+            errors.push(err.message);
+          }
+        } else {
+          errors.push(debtorsResult.reason?.message || "Couldn't load debtors");
+        }
+
+        if (txnsResult.status === 'fulfilled') {
+          try {
+            const txnsData = await parseListResponse(txnsResult.value, "Couldn't load transactions");
+            if (!isCancelled()) setTransactions(txnsData);
+          } catch (err) {
+            errors.push(err.message);
+          }
+        } else {
+          errors.push(txnsResult.reason?.message || "Couldn't load transactions");
+        }
+
+        if (dashResult.status === 'fulfilled' && dashResult.value.ok) {
+          const dashData = await dashResult.value.json().catch(() => null);
+          if (!isCancelled()) setDashboardStats(dashData);
+        } else if (!isCancelled()) {
+          setDashboardStats(null);
+        }
+
+        if (!isCancelled()) {
+          if (errors.length > 0) {
+            setAlert({
+              title: "Couldn't load some data",
+              text: errors[0],
+            });
+          } else {
+            setAlert(null);
+          }
+          setLoaded(true);
+        }
+
+      } else if (res.status === 201) {
+        const status = await res.json();
+        worker.token_manager({action: "store", token: status.access_token})
+        window.location.reload()
       }
 
     } else {
       return null
     }
-  }, []);
+
+  }, [token]);
 
   const fetchDashboardData = useCallback(async () => {
     if (!token) return;
